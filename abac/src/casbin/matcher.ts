@@ -41,7 +41,10 @@ function lessThan(p1: any, p2: any): boolean {
   return p1 < p2;
 }
 
-function myMatcherWrapper(input: object, op: string, ...paramPaths: string[]): boolean {
+function myMatcherWrapper(...args: any[]): boolean {
+  const input = args[0];
+  const op = args[1];
+  const paramPaths = args.splice(2);
   const params = _.map(paramPaths, paramPath => _.get(input, paramPath));
   return myMatcher(op, params);
 }
