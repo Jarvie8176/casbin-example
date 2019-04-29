@@ -1,0 +1,37 @@
+{
+  "editor.formatOnSave": true,
+  "prettier.semi": true,
+  "printWidth": 120,
+  "overrides": [
+    {
+      "files": "default.js",
+      "options": {
+        "printWidth": 320
+      }
+    },
+    {
+      "files": "test.js",
+      "options": {
+        "printWidth": 320
+      }
+    },
+    {
+      "files": "snapshot.js",
+      "options": {
+        "printWidth": 320
+      }
+    },
+    {
+      "files": "staging.js",
+      "options": {
+        "printWidth": 320
+      }
+    },
+    {
+      "files": "production.js",
+      "options": {
+        "printWidth": 320
+      }
+    }
+  ]
+}

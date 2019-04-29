@@ -1,0 +1,2 @@
+p, view, patient:medicalRecord, =, doctor.id, patient.medicalRecord.assignedTo
+p, view, patient:billingInfo, =, accountant.id, patient.billingInfo.assignedTo
