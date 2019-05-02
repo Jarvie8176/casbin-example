@@ -1,11 +1,5 @@
 import { Module } from "@nestjs/common";
-import { PatientsController } from "./api/patients.controller";
-import { PatientsService } from "./service/patients/patients.service";
-import { AuthzModule } from "./authz.module";
+import { metadata } from "./common/metadata/api.module.metadata";
 
-@Module({
-  imports: [AuthzModule],
-  controllers: [PatientsController],
-  providers: [PatientsService]
-})
+@Module(metadata)
 export class ApiModule {}

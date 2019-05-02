@@ -8,6 +8,7 @@ export function getMetadata(authzEnable: boolean) {
   return {
     imports: [AuthzModule],
     controllers: [PatientsController],
-    providers: [PatientsService, { provide: "AUTHZ_ENABLE", useValue: authzEnable }]
+    providers: [PatientsService, { provide: "AUTHZ_ENABLE", useValue: authzEnable }],
+    exports: [PatientsService, { provide: "AUTHZ_ENABLE", useValue: authzEnable }]
   };
 }

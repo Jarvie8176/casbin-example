@@ -12,7 +12,7 @@
     "start:debug": "nodemon --config nodemon-debug.json",
     "prestart:prod": "rimraf dist && npm run build",
     "start:prod": "node dist/main.js",
-    "lint": "tslint -p tsconfig.json -c tslint.json",
+    "lint": "eslint -c .eslintrc.js",
     "test": "node_modules/.bin/jest",
     "test:watch": "node_modules/.bin/jest --watch",
     "test:cov": "node_modules/.bin/jest --coverage",
@@ -63,7 +63,7 @@
       "ts"
     ],
     "rootDir": "src",
-    "testRegex": ".spec.ts$",
+    "testRegex": "/src/.*\\.(test|spec).(ts|tsx|js)$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },

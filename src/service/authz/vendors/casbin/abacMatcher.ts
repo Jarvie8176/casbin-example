@@ -1,5 +1,5 @@
 import * as _ from "lodash";
-import { InvalidInput } from "src/errors";
+import { InvalidInput } from "src/common/errors";
 import { myMatcherWrapper } from "./matcher";
 
 export class AbacMatcher {

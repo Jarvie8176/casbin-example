@@ -1,15 +1,18 @@
-import { ClassSerializerInterceptor, Inject, Injectable, UseInterceptors } from "@nestjs/common";
+import { ClassSerializerInterceptor, Inject, Injectable, OnModuleInit, UseInterceptors } from "@nestjs/common";
 import { Connection, getConnection } from "typeorm";
 import { Patient } from "../../entity/Patient";
 import { BillingInfo } from "../../entity/BillingInfo";
 import { MedicalRecord } from "../../entity/MedicalRecord";
 import { AuthorizationService } from "../authz/authz.service";
-import { PatientsServiceRequest } from "../../common/interfaces/serviceRequest";
+import { IPatientsService, PatientsServiceRequest } from "../../common/interfaces/patients.service";
 import { AuthzQuery } from "../authz/vendors/authz.vendors";
 import * as _ from "lodash";
+import { Unauthorized } from "../../common/errors";
+import { UserContext } from "../../common/interfaces/authz";
+import { getMockConnection } from "../../utils";
 
 @Injectable()
-export class PatientsService {
+export class PatientsService implements IPatientsService {
   static readonly InclCandidates = {
     patientInfo: (connection: Connection) =>
       connection.getMetadata(Patient).ownColumns.map(col => `p.${col.propertyName}`),
@@ -24,10 +27,14 @@ export class PatientsService {
     @Inject("AUTHZ_ENABLE") private readonly authzEnabled: boolean
   ) {}
 
+  async onModuleInit(): Promise<void> {
+    await this.authzService.onModuleInit();
+  }
+
   static readonly DefaultCandidates = ["patientInfo"];
 
   @UseInterceptors(ClassSerializerInterceptor)
-  async list<T, K extends keyof T>(includes?: string[]): Promise<Patient[]> {
+  async list(user: UserContext, includes?: string[]): Promise<Patient[]> {
     includes = this.filterColumns(includes);
     return this.getConnection()
       .getRepository(Patient)
@@ -39,7 +46,7 @@ export class PatientsService {
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  async detail(patientId: number, includes?: string[]): Promise<Patient> {
+  async detail(user: UserContext, patientId: number, includes?: string[]): Promise<Patient> {
     let request: PatientsServiceRequest = {
       subject: null,
       target: {
@@ -60,7 +67,7 @@ export class PatientsService {
         false
       );
 
-      if (!decision) throw new Error("authz failed");
+      if (!decision) throw new Unauthorized();
     }
 
     return this.getConnection()
@@ -93,6 +100,7 @@ export class PatientsService {
     return getConnection();
   }
 
+  // exposed for testing
   translateRequestToAuthzQuery(request: PatientsServiceRequest): AuthzQuery[] {
     const action = request.target.action;
     const patientId = request.target.patientId || "*";
@@ -105,3 +113,5 @@ export class PatientsService {
     }));
   }
 }
+
+

@@ -3,7 +3,7 @@ import { AuthzAdapter, Policy } from "./authz.adapter";
 import { Casbin } from "./vendors/casbin/vendors.casbin";
 import { AuthzQuery, AuthzVendor } from "./vendors/authz.vendors";
 import * as _ from "lodash";
-import { InvalidInput, InvalidState } from "../../errors";
+import { InvalidInput, InvalidState } from "../../common/errors";
 
 @Injectable()
 export class AuthorizationService implements AuthzAdapter, OnModuleInit {

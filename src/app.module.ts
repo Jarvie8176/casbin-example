@@ -1,7 +1,5 @@
 import { Module } from "@nestjs/common";
-import { ApiModule } from "./api.module";
+import { metadata } from "./common/metadata/app.module.metadata";
 
-@Module({
-  imports: [ApiModule]
-})
+@Module(metadata)
 export class AppModule {}

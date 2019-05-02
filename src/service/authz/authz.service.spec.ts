@@ -1,9 +1,9 @@
 import { AuthorizationService } from "./authz.service";
-import { AuthzQuery, AuthzVendor, DecisionDetails } from "./vendors/authz.vendors";
+import { AuthzQuery, AuthzVendor } from "./vendors/authz.vendors";
 import { Casbin } from "./vendors/casbin/vendors.casbin";
 import { Test } from "@nestjs/testing";
 import { metadata } from "../../common/metadata/authz.module.metadata";
-import { InvalidState } from "../../errors";
+import { InvalidState } from "../../common/errors";
 
 describe("authorization module", () => {
   describe("init", () => {
@@ -18,12 +18,12 @@ describe("authorization module", () => {
     let authzVendor: AuthzVendor;
     let authzService: AuthorizationService;
 
-    // beforeEach(async () => {
-    //   const module = await Test.createTestingModule(metadata).compile();
-    //   authzVendor = module.get("Casbin");
-    //   authzService = module.get("AuthorizationService");
-    //   await authzService.onModuleInit();
-    // });
+    beforeEach(async () => {
+      const module = await Test.createTestingModule(metadata).compile();
+      authzVendor = module.get("Casbin");
+      authzService = module.get("AuthorizationService");
+      await authzService.onModuleInit();
+    });
 
     it("enriches input with context", async () => {
       const module = await Test.createTestingModule(metadata).compile();

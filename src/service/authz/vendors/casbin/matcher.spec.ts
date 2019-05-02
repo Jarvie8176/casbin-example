@@ -1,4 +1,4 @@
-import { InvalidInput } from "src/errors";
+import { InvalidInput } from "src/common/errors";
 import { myMatcher, myMatcherWrapper } from "./matcher";
 
 describe("custom matcher", () => {
