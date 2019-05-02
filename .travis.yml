@@ -1,0 +1,10 @@
+sudo: false
+language: node_js
+node_js:
+  - 11
+install:
+  - npm install
+script:
+  - npm run test
+after_success:
+  - npm run test:cov
