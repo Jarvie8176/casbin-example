@@ -2,6 +2,8 @@ sudo: false
 language: node_js
 node_js:
   - 11
+before_script:
+  - cd app/
 install:
   - npm install
 script:
