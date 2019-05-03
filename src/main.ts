@@ -7,9 +7,11 @@ import { Accountant } from "./entity/Accountant";
 import { Doctor } from "./entity/Doctor";
 import { User } from "./entity/User";
 import { MedicalRecord } from "./entity/MedicalRecord";
+import * as cookieParser from "cookie-parser";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.use(cookieParser());
   await createConnection();
   await seeding();
   await app.listen(3000);

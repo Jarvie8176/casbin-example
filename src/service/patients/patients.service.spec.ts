@@ -5,8 +5,8 @@ import { getMetadata } from "../../common/metadata/api.module.metadata";
 import { Test } from "@nestjs/testing";
 import { getMockConnection } from "../../utils";
 import { entities } from "ormconfig";
-import { Unauthorized } from "../../common/errors";
 import { Connection } from "typeorm";
+import { ForbiddenException } from "@nestjs/common";
 
 describe("PatientsService: authz", () => {
   let patientsService: PatientsService;
@@ -17,7 +17,7 @@ describe("PatientsService: authz", () => {
     patientsService = module.get("PatientsService");
     await patientsService.onModuleInit();
     mockConnection = await getMockConnection(entities);
-    jest.spyOn(patientsService, "getConnection").mockImplementation(() => mockConnection);
+    jest.spyOn<any, string>(patientsService, "getConnection").mockImplementation(() => mockConnection);
   });
 
   afterEach(async () => {
@@ -25,7 +25,9 @@ describe("PatientsService: authz", () => {
   });
 
   describe("translation", () => {
-    it("converts input into an authz request", async () => {
+    beforeEach(async () => {});
+
+    it("converts data into an authz request", async () => {
       let authzRequestCaptured: PatientsServiceRequest = null;
       jest
         .spyOn(patientsService, "translateRequestToAuthzQuery")
@@ -33,14 +35,20 @@ describe("PatientsService: authz", () => {
           authzRequestCaptured = request;
           return [];
         });
+      jest.spyOn<any, string>(patientsService, "getPatient").mockImplementation(() => {
+        return null;
+      });
 
-      await patientsService.detail(null, 1, ["billingInfo"]);
+      await patientsService.detail({ id: 1, persona: [{ type: "patient", id: 1 }] }, 1, ["billingInfo"]).catch(err => {
+        if (err instanceof ForbiddenException) return;
+        throw err;
+      });
       expect(authzRequestCaptured).toEqual(<PatientsServiceRequest>{
-        subject: null,
+        subject: { user: { id: 1 }, patient: { id: 1 } },
         target: {
-          patientId: 1,
+          patient: null,
           action: "view",
-          attributes: ["patientInfo", "billingInfo"]
+          attributes: ["billingInfo", "patientInfo"]
         }
       });
     });
@@ -49,7 +57,7 @@ describe("PatientsService: authz", () => {
       const request = <PatientsServiceRequest>{
         subject: { user: { id: 1 } },
         target: {
-          patientId: 1,
+          patient: null,
           action: "view",
           attributes: ["patientInfo", "medicalRecord", "billingInfo"]
         }
@@ -57,24 +65,27 @@ describe("PatientsService: authz", () => {
 
       expect(patientsService.translateRequestToAuthzQuery(request)).toEqual([
         <AuthzQuery>{
-          input: {
-            user: { id: 1 }
+          data: {
+            input: { user: { id: 1 } },
+            context: { patient: null }
           },
-          target: "patient:1:patientInfo",
+          target: "patient:*:patientInfo",
           action: "view"
         },
         <AuthzQuery>{
-          input: {
-            user: { id: 1 }
+          data: {
+            input: { user: { id: 1 } },
+            context: { patient: null }
           },
-          target: "patient:1:medicalRecord",
+          target: "patient:*:medicalRecord",
           action: "view"
         },
         <AuthzQuery>{
-          input: {
-            user: { id: 1 }
+          data: {
+            input: { user: { id: 1 } },
+            context: { patient: null }
           },
-          target: "patient:1:billingInfo",
+          target: "patient:*:billingInfo",
           action: "view"
         }
       ]);
@@ -83,7 +94,7 @@ describe("PatientsService: authz", () => {
 
   describe("decision", () => {
     it("throws an error on a failed authorization check", async () => {
-      await expect(patientsService.detail(null, 1)).rejects.toThrow(Unauthorized);
+      await expect(patientsService.detail({ id: 9, persona: [] }, 1)).rejects.toThrow(ForbiddenException);
     });
   });
 });

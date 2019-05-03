@@ -17,10 +17,3 @@ export class InvalidState extends AuthzError {
     Object.setPrototypeOf(this, InvalidState.prototype);
   }
 }
-
-export class Unauthorized extends AuthzError {
-  constructor(m?: string) {
-    super(m);
-    Object.setPrototypeOf(this, Unauthorized.prototype);
-  }
-}

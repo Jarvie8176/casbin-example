@@ -10,8 +10,8 @@ describe("authz vendor: casbin", () => {
     await casbin.init(Casbin.MODEL_PATH);
     //  p = act, obj, op, p1, p2
     policies = [
-      ["view", "patient:.*:.*", "=", "user.id", "patient.id"],
-      ["view", "some-other-resource", "=", "user.id", "patient.id"]
+      ["view", "patient:.*:.*", "=", "input.user.id", "context.patient.id"],
+      ["view", "some-other-resource", "=", "input.user.id", "context.patient.id"]
     ];
     await casbin.addPolicy(...policies[0]);
     await casbin.addPolicy(...policies[1]);
@@ -22,9 +22,13 @@ describe("authz vendor: casbin", () => {
       await casbin.getDecision({
         target: "patient:1:*",
         action: "view",
-        input: {
-          user: { id: 1 },
-          patient: { id: 1 }
+        data: {
+          input: {
+            user: { id: 1 }
+          },
+          context: {
+            patient: { id: 1 }
+          }
         }
       })
     ).toEqual(true);
@@ -33,9 +37,9 @@ describe("authz vendor: casbin", () => {
     const decisionDetails = await casbin.getDecisionDetails({
       action: "view",
       target: "patient:1:*",
-      input: {
-        user: { id: 2 },
-        patient: { id: 1 }
+      data: {
+        input: { user: { id: 2 } },
+        context: { patient: { id: 1 } }
       }
     });
     expect(decisionDetails.checkedPolicies).toHaveLength(1);
@@ -44,7 +48,7 @@ describe("authz vendor: casbin", () => {
       resource: "patient:.*:.*",
       operation: {
         operator: "=",
-        params: ["user.id", "patient.id"]
+        params: ["input.user.id", "context.patient.id"]
       }
     });
     expect(decisionDetails.matchedPolicies).toHaveLength(0);

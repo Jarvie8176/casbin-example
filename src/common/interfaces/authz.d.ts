@@ -1,5 +1,6 @@
 export interface UserContext {
   id: number;
+  privilegeLevel?: number,
   persona: UserPersona[];
 }
 

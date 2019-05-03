@@ -28,6 +28,7 @@
     "bluebird": "^3.5.4",
     "casbin": "^2.0.4",
     "class-transformer": "^0.2.0",
+    "cookie-parser": "^1.4.4",
     "lodash": "^4.17.11",
     "reflect-metadata": "^0.1.12",
     "rimraf": "^2.6.2",

@@ -1,6 +1,6 @@
 import { Test } from "@nestjs/testing";
 import * as request from "supertest";
-
+import * as cookieParser from "cookie-parser";
 import { entities } from "ormconfig";
 import { User } from "../../src/entity/User";
 import { Doctor } from "../../src/entity/Doctor";
@@ -9,18 +9,16 @@ import { Patient } from "../../src/entity/Patient";
 import { MedicalRecord } from "../../src/entity/MedicalRecord";
 import { BillingInfo } from "../../src/entity/BillingInfo";
 import { Connection } from "typeorm";
-import { PatientsController } from "../../src/api/patients.controller";
 import { PatientsService } from "../../src/service/patients/patients.service";
 import { getMockConnection } from "../../src/utils";
 import { metadata } from "../../src/common/metadata/app.module.metadata";
 import { INestApplication } from "@nestjs/common";
+import { UserContext } from "../../src/common/interfaces/authz";
 
 describe("Patients", () => {
   let app: INestApplication;
-
-  let patientsController: PatientsController;
-  let patientsService: PatientsService;
   let mockConnection: Connection;
+  let patientsService: PatientsService;
 
   let doctorUser: User;
   let accountantUser: User;
@@ -33,20 +31,26 @@ describe("Patients", () => {
     await fixtureSetup();
 
     const apiModule = await Test.createTestingModule(metadata).compile();
-    patientsController = apiModule.get("PatientsController");
     patientsService = apiModule.get("PatientsService");
     await patientsService.onModuleInit();
-    jest.spyOn(patientsService, "getConnection").mockImplementation(() => mockConnection);
+    jest.spyOn<any, string>(patientsService, "getConnection").mockImplementation(() => mockConnection);
 
-    const appModule = await Test.createTestingModule(metadata).compile();
-
+    const appModule = await Test.createTestingModule(metadata)
+      .overrideProvider(PatientsService)
+      .useValue(patientsService)
+      .compile();
     app = appModule.createNestApplication();
+    app.use(cookieParser());
     await app.init();
   });
 
   afterAll(async () => mockConnection.close());
 
   describe("usage", () => {
+    beforeAll(async () => {
+      jest.spyOn<any, string>(patientsService, "getAuthzEnabled").mockImplementation(() => false);
+    });
+
     it("GET /patients/?fields=patientInfo: returns only patientInfo in the list of mock patients", async () => {
       const response = await request(app.getHttpServer())
         .get("/patients/?fields=patientInfo")
@@ -84,16 +88,10 @@ describe("Patients", () => {
 
     it("GET /patients/:id/?fields=billingInfo: returns only patientInfo and billingInfo in the detail of mock patients", async () => {
       const response = await request(app.getHttpServer())
-        .get(`/patients/${patients[1].id}/?fields=billingInfo`)
+        .get(`/patients/`)
         .expect(200);
       expect(response.body).toEqual({
-        data: {
-          id: patients[1].id,
-          billingInfo: {
-            id: patients[1].billingInfo.id,
-            address: patients[1].billingInfo.address
-          }
-        }
+        data: patients
       });
     });
 
@@ -117,9 +115,83 @@ describe("Patients", () => {
         }
       });
     });
+
+    it("GET /patients/:id/: id must be an int", async () => {
+      await request(app.getHttpServer())
+        .get(`/patients/A/?fields=billingInfo,medicalRecords`)
+        .expect(400);
+    });
   });
 
-  describe("authorization", () => {});
+  describe("authorization", () => {
+    beforeAll(async () => {
+      jest.spyOn<any, string>(patientsService, "getAuthzEnabled").mockImplementation(() => true);
+    });
+
+    it("GET /patients: log in as admin, lists all patients", async () => {
+      const context = <UserContext>{ id: 999, privilegeLevel: 999, persona: [{ type: "admin", id: 999 }] };
+      await request(app.getHttpServer())
+        .get(`/patients/${patients[1].id}/?fields=billingInfo,medicalRecords`)
+        .set("Cookie", [`context=${JSON.stringify(context)}`])
+        .expect(200);
+    });
+
+    // it("GET /patients: log in as no one, lists nothing", async () => {
+    //   const context = {};
+    //   const response = await request(app.getHttpServer())
+    //     .get(`/patients/`)
+    //     .set("Cookie", [`context=${JSON.stringify(context)}`])
+    //     .expect(200);
+    //   expect(response.body).toEqual({ data: [] });
+    // });
+
+    // it("GET /patients: log in as doctor, lists available patients", async () => {
+    //   expect(true).toEqual(false);
+    // });
+    //
+    // it("GET /patients: log in as patient, lists own details", async () => {
+    //   expect(true).toEqual(false);
+    // });
+
+    it("GET /patients/:id: log in as patient, views own details", async () => {
+      const context = <UserContext>{ id: patientUser1.id, persona: [{ type: "patient", id: patientUser1.id }] };
+      const response = await request(app.getHttpServer())
+        .get(`/patients/${patients[0].id}/?fields=billingInfo,medicalRecords`)
+        .set("Cookie", [`context=${JSON.stringify(context)}`])
+        .expect(200);
+      expect(response.body).toEqual({ data: patients[0] });
+    });
+
+    it("GET /patients/:id: log in as doctor, views accessible patient medical records", async () => {
+      const context = <UserContext>{ id: doctorUser.id, persona: [{ type: "doctor", id: doctorUser.id }] };
+      const response = await request(app.getHttpServer())
+        .get(`/patients/${patients[1].id}/?fields=medicalRecords`)
+        .set("Cookie", [`context=${JSON.stringify(context)}`])
+        .expect(200);
+      expect(response.body).toEqual({
+        data: {
+          id: patients[1].id,
+          medicalRecords: patients[1].medicalRecords
+        }
+      });
+    });
+
+    it("GET /patients/:id: log in as doctor, views accessible patient billingInfo", async () => {
+      const context = <UserContext>{ id: doctorUser.id, persona: [{ type: "doctor", id: doctorUser.id }] };
+      await request(app.getHttpServer())
+        .get(`/patients/${patients[1].id}/?fields=billingInfo`)
+        .set("Cookie", [`context=${JSON.stringify(context)}`])
+        .expect(403);
+    });
+
+    it("GET /patients/:id: log in as doctor, views non-accessible patient details", async () => {
+      const context = <UserContext>{ id: doctorUser.id, persona: [{ type: "doctor", id: doctorUser.id }] };
+      await request(app.getHttpServer())
+        .get(`/patients/${patients[1].id}/?fields=billingInfo,medicalRecords`)
+        .set("Cookie", [`context=${JSON.stringify(context)}`])
+        .expect(403);
+    });
+  });
 
   async function fixtureSetup() {
     doctorUser = new User();

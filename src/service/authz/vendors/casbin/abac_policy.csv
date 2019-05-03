@@ -1,4 +1,0 @@
-p, view, patient:.*:.*, =, user.id, patient.id
-p, view, patient:.*:.*, >=, user.privilegeLevel, __AUTHZ_CTX.ADMIN_PRIVILEGE
-p, view, patient:.*:medicalRecord, =, user.id, patient.medicalRecord.assignedTo
-p, view, patient:.*:billingInfo, =, user.id, patient.billingInfo.assignedTo

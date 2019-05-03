@@ -6,7 +6,7 @@ export interface DecisionDetails {
 }
 
 export interface AuthzQuery {
-  input: {};
+  data: {};
   action: string;
   target: string;
 }

@@ -12,7 +12,7 @@ const patientData = {
   medicalRecord: { assignedTo: 1 },
   billingInfo: { assignedTo: 2 }
 };
-const __AUTHZ_CTX = {
+const context = {
   ADMIN_PRIVILEGE: 5
 };
 
@@ -53,7 +53,7 @@ test("simpleAttribute:patientUser views own profile", async () => {
     {
       act: "view",
       obj: "patient:3:*",
-      input: { user: patientUser, patient: patientData, __AUTHZ_CTX }
+      input: { user: patientUser, patient: patientData, context }
     },
     true
   );
@@ -66,7 +66,7 @@ test("simpleAttribute:doctorUser views patient's profile", async () => {
     {
       act: "view",
       obj: "patient:3:*",
-      input: { user: doctorUser, patient: patientData, __AUTHZ_CTX }
+      input: { user: doctorUser, patient: patientData, context }
     },
     false
   );
@@ -79,7 +79,7 @@ test("simpleAttribute:doctorUser views own patient's medicalRecord", async () =>
     {
       act: "view",
       obj: "patient:3:medicalRecord",
-      input: { user: doctorUser, patient: patientData, __AUTHZ_CTX }
+      input: { user: doctorUser, patient: patientData, context }
     },
     true
   );
@@ -92,7 +92,7 @@ test("simpleAttribute:accountantUser views own patient's billingInfo ", async ()
     {
       act: "view",
       obj: "patient:3:billingInfo",
-      input: { user: accountantUser, patient: patientData, __AUTHZ_CTX }
+      input: { user: accountantUser, patient: patientData, context }
     },
     true
   );
@@ -105,7 +105,7 @@ test("simpleAttribute:doctorUser views own patient's billingInfo", async () => {
     {
       act: "view",
       obj: "patient:3:billingInfo",
-      input: { user: doctorUser, patient: patientData, __AUTHZ_CTX }
+      input: { user: doctorUser, patient: patientData, context }
     },
     false
   );
@@ -118,7 +118,7 @@ test("simpleAttribute:accountantUser views own patient's MedicalRecord", async (
     {
       act: "view",
       obj: "patient:3:medicalRecord",
-      input: { user: accountantUser, patient: patientData, __AUTHZ_CTX }
+      input: { user: accountantUser, patient: patientData, context }
     },
     false
   );
@@ -128,7 +128,7 @@ test("policyExtractor:patientUser views own profile", async () => {
   const enforcer = await getTestEnforcer("test/authz/config/casbin_model.conf", "test/authz/config/test_policy.csv");
   const matcher = new AbacMatcher();
   const params = {
-    input: { user: patientUser, patient: patientData, __AUTHZ_CTX },
+    input: { user: patientUser, patient: patientData, context },
     obj: "patient:3:medicalRecord",
     act: "view",
     matcher: matcher
@@ -138,7 +138,7 @@ test("policyExtractor:patientUser views own profile", async () => {
   const checkedPolicies = _.map(matcher.getCheckedPolicies(), (policy: any[]) => policy.join(", "));
   expect(checkedPolicies).toHaveLength(3);
   expect(checkedPolicies).toContain("view, patient:.*:.*, =, user.id, patient.id");
-  expect(checkedPolicies).toContain("view, patient:.*:.*, >=, user.privilegeLevel, __AUTHZ_CTX.ADMIN_PRIVILEGE");
+  expect(checkedPolicies).toContain("view, patient:.*:.*, >=, user.privilegeLevel, context.ADMIN_PRIVILEGE");
   expect(checkedPolicies).toContain("view, patient:.*:medicalRecord, =, user.id, patient.medicalRecord.assignedTo");
 
   const matchedPolicies = _.map(matcher.getMatchedPolicies(), (policy: any[]) => policy.join(", "));
@@ -150,7 +150,7 @@ test("policyExtractor:doctorUser views all patient's medicalRecord", async () =>
   const enforcer = await getTestEnforcer("test/authz/config/casbin_model.conf", "test/authz/config/test_policy.csv");
   const matcher = new AbacMatcher();
   const params = {
-    input: { user: doctorUser, __AUTHZ_CTX },
+    input: { user: doctorUser, context },
     obj: "patient:*:medicalRecord",
     act: "view",
     matcher: matcher
@@ -160,7 +160,7 @@ test("policyExtractor:doctorUser views all patient's medicalRecord", async () =>
   const checkedPolicies = _.map(matcher.getCheckedPolicies(), (policy: any[]) => policy.join(", "));
   expect(checkedPolicies).toHaveLength(3);
   expect(checkedPolicies).toContain("view, patient:.*:.*, =, user.id, patient.id");
-  expect(checkedPolicies).toContain("view, patient:.*:.*, >=, user.privilegeLevel, __AUTHZ_CTX.ADMIN_PRIVILEGE");
+  expect(checkedPolicies).toContain("view, patient:.*:.*, >=, user.privilegeLevel, context.ADMIN_PRIVILEGE");
   expect(checkedPolicies).toContain("view, patient:.*:medicalRecord, =, user.id, patient.medicalRecord.assignedTo");
 
   const matchedPolicies = _.map(matcher.getMatchedPolicies(), (policy: any[]) => policy.join(", "));
@@ -171,7 +171,7 @@ test("policyExtractor:admin views all patient's profile", async () => {
   const enforcer = await getTestEnforcer("test/authz/config/casbin_model.conf", "test/authz/config/test_policy.csv");
   const matcher = new AbacMatcher();
   const params = {
-    input: { user: adminUser, __AUTHZ_CTX },
+    input: { user: adminUser, context },
     obj: "patient:*:medicalRecord",
     act: "view",
     matcher: matcher
@@ -181,12 +181,12 @@ test("policyExtractor:admin views all patient's profile", async () => {
   const checkedPolicies = _.map(matcher.getCheckedPolicies(), (policy: any[]) => policy.join(", "));
   expect(checkedPolicies).toHaveLength(3);
   expect(checkedPolicies).toContain("view, patient:.*:.*, =, user.id, patient.id");
-  expect(checkedPolicies).toContain("view, patient:.*:.*, >=, user.privilegeLevel, __AUTHZ_CTX.ADMIN_PRIVILEGE");
+  expect(checkedPolicies).toContain("view, patient:.*:.*, >=, user.privilegeLevel, context.ADMIN_PRIVILEGE");
   expect(checkedPolicies).toContain("view, patient:.*:medicalRecord, =, user.id, patient.medicalRecord.assignedTo");
 
   const matchedPolicies = _.map(matcher.getMatchedPolicies(), (policy: any[]) => policy.join(", "));
   expect(matchedPolicies).toHaveLength(1);
-  expect(checkedPolicies).toContain("view, patient:.*:.*, >=, user.privilegeLevel, __AUTHZ_CTX.ADMIN_PRIVILEGE");
+  expect(checkedPolicies).toContain("view, patient:.*:.*, >=, user.privilegeLevel, context.ADMIN_PRIVILEGE");
 });
 
 async function testEnforce(e: Enforcer, params: { input: any; obj: any; act: any; matcher?: any }, res: boolean) {

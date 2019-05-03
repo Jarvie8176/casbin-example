@@ -1,0 +1,5 @@
+p, view, patient:.*:.*, =, input.user.id, context.patient.id
+p, view, patient:.*:.*, >=, input.user.privilegeLevel, AUTHZ_CTX.ADMIN_PRIVILEGE
+p, view, patient:.*:patientInfo, inByPathNested, input.user.id, context.patient.medicalRecords, doctorsAssigned, id
+p, view, patient:.*:medicalRecord, inByPathNested, input.user.id, context.patient.medicalRecords, doctorsAssigned, id
+p, view, patient:.*:billingInfo, =, input.user.id, context.patient.billingInfo.assignedTo
