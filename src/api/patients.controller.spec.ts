@@ -61,12 +61,18 @@ describe("PatientsController", () => {
     });
 
     it("admin user lists all patients", async () => {
-      expect(await patientsController.list(null, { user: { id: 999, privilegeLevel: 999 } })).toEqual(patients);
+      expect(
+        await patientsController.list(null, {
+          context: JSON.stringify({ id: 999, privilegeLevel: 999 })
+        })
+      ).toEqual(patients);
     });
     it("doctor user views a patient's billingInfo", async () => {
-      await expect(patientsController.detail(patients[0].id, "billingInfo", { user: doctorUser })).rejects.toThrow(
-        ForbiddenException
-      );
+      await expect(
+        patientsController.detail(patients[0].id, "billingInfo", {
+          context: JSON.stringify(doctorUser)
+        })
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 

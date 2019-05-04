@@ -70,6 +70,7 @@ describe("PatientsService: authz", () => {
             context: { patient: null }
           },
           target: "patient:*:patientInfo",
+          attribute: "patientInfo",
           action: "view"
         },
         <AuthzQuery>{
@@ -78,6 +79,7 @@ describe("PatientsService: authz", () => {
             context: { patient: null }
           },
           target: "patient:*:medicalRecord",
+          attribute: "medicalRecord",
           action: "view"
         },
         <AuthzQuery>{
@@ -86,6 +88,7 @@ describe("PatientsService: authz", () => {
             context: { patient: null }
           },
           target: "patient:*:billingInfo",
+          attribute: "billingInfo",
           action: "view"
         }
       ]);

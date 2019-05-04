@@ -27,7 +27,6 @@ export class AuthorizationService implements AuthzAdapter, OnModuleInit {
    * this method implements proxy pattern to inject context
    */
   async getDecision(query: AuthzQuery): Promise<boolean> {
-    query = _.cloneDeep(query);
     this.preprocess(query);
     return this.vendor.getDecision(query);
   }
@@ -36,7 +35,6 @@ export class AuthorizationService implements AuthzAdapter, OnModuleInit {
    * this method implements proxy pattern to inject context
    */
   async getCheckedPolicies(query: AuthzQuery): Promise<Policy[]> {
-    query = _.cloneDeep(query);
     this.preprocess(query);
     return this.vendor.getDecisionDetails(query).then(decisionDetails => decisionDetails.checkedPolicies);
   }
@@ -45,7 +43,6 @@ export class AuthorizationService implements AuthzAdapter, OnModuleInit {
    * this method implements proxy pattern to inject context
    */
   async getMatchedPolicies(query: AuthzQuery): Promise<Policy[]> {
-    query = _.cloneDeep(query);
     this.preprocess(query);
     return this.vendor.getDecisionDetails(query).then(decisionDetails => decisionDetails.matchedPolicies);
   }
@@ -67,8 +64,11 @@ export class AuthorizationService implements AuthzAdapter, OnModuleInit {
     }
   }
 
+  /**
+   * it mutates the query and adds server side authorization context
+   */
   private attachContext(query: AuthzQuery): AuthzQuery {
-    query.data = _.assign({}, query.data, { AUTHZ_CTX: AuthorizationService.AUTHZ_CTX });
+    query.data = _.extend(query.data, { AUTHZ_CTX: AuthorizationService.AUTHZ_CTX });
     return query;
   }
 

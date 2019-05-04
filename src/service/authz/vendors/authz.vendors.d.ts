@@ -9,6 +9,7 @@ export interface AuthzQuery {
   data: {};
   action: string;
   target: string;
+  attribute: string;
 }
 
 export interface AuthzVendor {

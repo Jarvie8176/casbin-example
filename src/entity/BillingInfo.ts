@@ -10,7 +10,7 @@ export class BillingInfo {
   @ManyToOne(() => Patient, patient => patient.billingInfo)
   patient: Patient;
 
-  @ManyToMany(() => Accountant, accountant => accountant.id)
+  @ManyToOne(() => Accountant, accountant => accountant.id)
   @JoinTable()
   accountant?: Accountant;
 

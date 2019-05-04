@@ -136,14 +136,14 @@ describe("Patients", () => {
         .expect(200);
     });
 
-    // it("GET /patients: log in as no one, lists nothing", async () => {
-    //   const context = {};
-    //   const response = await request(app.getHttpServer())
-    //     .get(`/patients/`)
-    //     .set("Cookie", [`context=${JSON.stringify(context)}`])
-    //     .expect(200);
-    //   expect(response.body).toEqual({ data: [] });
-    // });
+    it("GET /patients: log in as no one, lists nothing", async () => {
+      const context = undefined;
+      const response = await request(app.getHttpServer())
+        .get(`/patients/`)
+        .set("Cookie", [`context=${JSON.stringify(context)}`])
+        .expect(200);
+      expect(response.body).toEqual({ data: [] });
+    });
 
     // it("GET /patients: log in as doctor, lists available patients", async () => {
     //   expect(true).toEqual(false);

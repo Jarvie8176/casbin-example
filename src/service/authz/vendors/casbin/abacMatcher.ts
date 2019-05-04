@@ -1,8 +1,8 @@
 import * as _ from "lodash";
 import { InvalidInput } from "src/common/errors/errors";
-import { IMatcher } from "../../../../common/interfaces/authz.vendor.casbin";
+import { IPolicyMatcher } from "../../../../common/interfaces/authz";
 
-class Matcher implements IMatcher {
+class Matcher implements IPolicyMatcher {
   constructor(private readonly op: any, private readonly params: any[], private readonly input: {}) {}
 
   eval(): boolean {

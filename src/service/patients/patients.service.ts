@@ -1,5 +1,5 @@
 import { ClassSerializerInterceptor, ForbiddenException, Inject, Injectable, UseInterceptors } from "@nestjs/common";
-import { Connection, getConnection } from "typeorm";
+import { Brackets, Connection, getConnection } from "typeorm";
 import { Patient } from "../../entity/Patient";
 import { BillingInfo } from "../../entity/BillingInfo";
 import { MedicalRecord } from "../../entity/MedicalRecord";
@@ -7,18 +7,22 @@ import { AuthorizationService } from "../authz/authz.service";
 import { IPatientsService, PatientsServiceRequest } from "../../common/interfaces/patients.service";
 import { AuthzQuery } from "../authz/vendors/authz.vendors";
 import * as _ from "lodash";
-import { UserContext, UserPersona } from "../../common/interfaces/authz";
 import * as util from "util";
+import { UserContext, UserPersona } from "../../common/interfaces/authz";
+import { Policy } from "../authz/authz.adapter";
+import { QueryModifier } from "./queryModifier";
+
+// export class PatientsServiceRequest
 
 @Injectable()
 export class PatientsService implements IPatientsService {
   static readonly InclCandidates = {
     patientInfo: (connection: Connection) =>
-      connection.getMetadata(Patient).ownColumns.map(col => `p.${col.propertyName}`),
+      connection.getMetadata(Patient).ownColumns.map(col => `patient.${col.propertyName}`),
     billingInfo: (connection: Connection) =>
-      connection.getMetadata(BillingInfo).ownColumns.map(col => `b.${col.propertyName}`),
+      connection.getMetadata(BillingInfo).ownColumns.map(col => `billingInfo.${col.propertyName}`),
     medicalRecords: (connection: Connection) =>
-      connection.getMetadata(MedicalRecord).ownColumns.map(col => `mr.${col.propertyName}`)
+      connection.getMetadata(MedicalRecord).ownColumns.map(col => `medicalRecords.${col.propertyName}`)
   };
 
   constructor(
@@ -35,42 +39,69 @@ export class PatientsService implements IPatientsService {
   @UseInterceptors(ClassSerializerInterceptor)
   async list(user: UserContext, includes?: string[]): Promise<Patient[]> {
     includes = this.filterAttributes(includes);
-    return this.getConnection()
+
+    let dataQuery = this.getConnection()
       .getRepository(Patient)
-      .createQueryBuilder("p")
-      .leftJoinAndSelect("p.billingInfo", "b")
-      .leftJoinAndSelect("p.medicalRecords", "mr")
-      .select(this.filterColumns(includes))
-      .getMany();
+      .createQueryBuilder("patient")
+      .leftJoinAndSelect("patient.billingInfo", "billingInfo")
+      .leftJoinAndSelect("billingInfo.accountant", "accountant")
+      .leftJoinAndSelect("patient.medicalRecords", "medicalRecords")
+      .leftJoinAndSelect("medicalRecords.doctorsAssigned", "doctorsAssigned")
+      .select(this.filterColumns(includes));
+
+    // authz
+    if (this.getAuthzEnabled()) {
+      let authzRequest = await this.computePatientsServiceRequest(user, includes);
+
+      let decisions = await Promise.all(
+        _.map(this.translateRequestToAuthzQuery(authzRequest), async authzQuery => {
+          let p = await this.authzService.getCheckedPolicies(authzQuery);
+          return {
+            query: authzQuery,
+            policies: p
+          };
+        })
+      );
+
+      let attributeDecisionGroup = _.chain(decisions)
+        .groupBy(decision => decision.query.attribute)
+        .mapValues(policiesList => ({ query: policiesList[0].query, policies: policiesList[0].policies }))
+        .value();
+
+      // query rewrite
+      _.forOwn(attributeDecisionGroup, (decisionGroup, attribute) => {
+        if (_.includes(includes, attribute)) {
+          dataQuery.andWhere(
+            new Brackets(builder => {
+              _.each(decisionGroup.policies, policy => {
+                let clause = new QueryModifier(decisionGroup.query, policy).eval();
+                builder.orWhere(clause.queryParticle, clause.params);
+              });
+            })
+          );
+        }
+      });
+    }
+
+    return dataQuery.getMany();
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
   async detail(user: UserContext, patientId: number, includes?: string[]): Promise<Patient> {
     includes = this.filterAttributes(includes);
 
-    const personas = _.chain(user.persona)
-      .keyBy("type")
-      .mapValues((v: keyof UserPersona) => _.omit(v, "type"))
-      .value();
-
     // authz
     if (this.getAuthzEnabled()) {
-      let request: PatientsServiceRequest = <PatientsServiceRequest>{
-        subject: _.extend({ user: _.omit(user, ["persona"]) }, personas),
-        target: {
-          patient: await this.getPatient(patientId),
-          action: "view",
-          attributes: includes
-        }
-      };
-
       let decisions = await Promise.all(
-        _.map(this.translateRequestToAuthzQuery(request), async authzQuery => {
-          return {
-            query: authzQuery,
-            decision: await this.authzService.getDecision(authzQuery)
-          };
-        })
+        _.map(
+          this.translateRequestToAuthzQuery(await this.computePatientsServiceRequest(user, includes, patientId)),
+          async authzQuery => {
+            return {
+              query: authzQuery,
+              decision: await this.authzService.getDecision(authzQuery)
+            };
+          }
+        )
       );
 
       if (
@@ -84,11 +115,25 @@ export class PatientsService implements IPatientsService {
 
     return this.getConnection()
       .getRepository(Patient)
-      .createQueryBuilder("p")
-      .leftJoinAndSelect("p.billingInfo", "b")
-      .leftJoinAndSelect("p.medicalRecords", "mr")
+      .createQueryBuilder("patient")
+      .leftJoinAndSelect("patient.billingInfo", "billingInfo")
+      .leftJoinAndSelect("billingInfo.accountant", "accountant")
+      .leftJoinAndSelect("patient.medicalRecords", "medicalRecords")
+      .leftJoinAndSelect("medicalRecords.doctorsAssigned", "doctorsAssigned")
       .select(this.filterColumns(includes))
-      .where("p.id = :id", { id: patientId })
+      .where("patient.id = :id", { id: patientId })
+      .getOne();
+  }
+
+  private async getPatient(id: number): Promise<Patient> {
+    return this.getConnection()
+      .getRepository(Patient)
+      .createQueryBuilder("patient")
+      .leftJoinAndSelect("patient.billingInfo", "billingInfo")
+      .leftJoinAndSelect("billingInfo.accountant", "accountant")
+      .leftJoinAndSelect("patient.medicalRecords", "medicalRecords")
+      .leftJoinAndSelect("medicalRecords.doctorsAssigned", "doctorsAssigned")
+      .where("patient.id = :id", { id: id })
       .getOne();
   }
 
@@ -118,6 +163,25 @@ export class PatientsService implements IPatientsService {
       .value();
   }
 
+  private async computePatientsServiceRequest(
+    user: UserContext,
+    attributes: string[],
+    patientId?: number
+  ): Promise<PatientsServiceRequest> {
+    const personas = _.chain(user.persona)
+      .keyBy("type")
+      .mapValues((v: keyof UserPersona) => _.omit(v, "type"))
+      .value();
+    return {
+      subject: _.extend({ user: _.omit(user, ["persona"]) }, personas),
+      target: {
+        patient: _.isNil(patientId) ? null : await this.getPatient(patientId),
+        action: "view",
+        attributes: attributes
+      }
+    };
+  }
+
   // exposed for testing
   private getConnection(): Connection {
     return getConnection();
@@ -132,23 +196,15 @@ export class PatientsService implements IPatientsService {
   translateRequestToAuthzQuery(request: PatientsServiceRequest): AuthzQuery[] {
     const action = request.target.action;
     const patient = request.target.patient;
-    const resources = _.map(request.target.attributes, attr => `patient:${_.get(patient, "id", "*")}:${attr}`);
+    const resources = _.map(request.target.attributes, attr => ({
+      target: `patient:${_.get(patient, "id", "*")}:${attr}`,
+      attribute: attr
+    }));
 
     return _.map(resources, resource => ({
       data: { input: request.subject, context: { patient: patient } },
       action: action,
-      target: resource
+      ...resource
     }));
-  }
-
-  private async getPatient(id: number): Promise<Patient> {
-    return this.getConnection()
-      .getRepository(Patient)
-      .createQueryBuilder("p")
-      .leftJoinAndSelect("p.billingInfo", "b")
-      .leftJoinAndSelect("p.medicalRecords", "mr")
-      .leftJoinAndSelect("mr.doctorsAssigned", "doctorsAssigned")
-      .where("p.id = :id", { id: id })
-      .getOne();
   }
 }
