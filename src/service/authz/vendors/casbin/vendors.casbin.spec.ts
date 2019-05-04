@@ -29,7 +29,8 @@ describe("authz vendor: casbin", () => {
           context: {
             patient: { id: 1 }
           }
-        }
+        },
+        attribute: ""
       })
     ).toEqual(true);
   });
@@ -40,7 +41,8 @@ describe("authz vendor: casbin", () => {
       data: {
         input: { user: { id: 2 } },
         context: { patient: { id: 1 } }
-      }
+      },
+      attribute: ""
     });
     expect(decisionDetails.checkedPolicies).toHaveLength(1);
     expect(decisionDetails.checkedPolicies).toContainEqual(<Policy>{

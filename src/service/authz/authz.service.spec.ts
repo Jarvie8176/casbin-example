@@ -36,12 +36,17 @@ describe("authorization module", () => {
       });
 
       let inputExtracted: {} = null;
-      await authzService.getDecision({ data: { a: 1 }, action: "", target: "" });
+      await authzService.getDecision({ data: { a: 1 }, action: "", target: "", attribute: "" });
       expect(inputExtracted).toEqual({ a: 1, AUTHZ_CTX: AuthorizationService.AUTHZ_CTX });
     });
 
     it("rejects request if data contains reserved keyword", async () => {
-      const authzQuery: AuthzQuery = { data: { input: { a: 1 }, AUTHZ_CTX: {} }, action: "", target: "" };
+      const authzQuery: AuthzQuery = {
+        data: { input: { a: 1 }, AUTHZ_CTX: {} },
+        action: "",
+        target: "",
+        attribute: ""
+      };
       await expect(authzService.getDecision(authzQuery)).rejects.toThrow();
       await expect(authzService.getCheckedPolicies(authzQuery)).rejects.toThrow();
       await expect(authzService.getMatchedPolicies(authzQuery)).rejects.toThrow();
@@ -63,14 +68,16 @@ describe("authorization module", () => {
           await authzService.getDecision({
             data: { input: { user: { id: 1 } }, context: { patient: { id: 1 } } },
             target: "patient:1:",
-            action: "view"
+            action: "view",
+            attribute: ""
           })
         ).toEqual(true);
         expect(
           await authzService.getDecision({
             data: { input: { user: { id: 2 } }, context: { patient: { id: 1 } } },
             target: "patient:1:",
-            action: "view"
+            action: "view",
+            attribute: ""
           })
         ).toEqual(false);
       });
@@ -82,7 +89,8 @@ describe("authorization module", () => {
           await authzService.getCheckedPolicies({
             data: { user: { id: 1 }, patient: { id: 2 } },
             target: "patient:1:medicalRecord",
-            action: "view"
+            action: "view",
+            attribute: ""
           })
         ).toEqual([
           Casbin.CasbinPolicyToPolicy(["view", "patient:.*:.*", "=", "input.user.id", "context.patient.id"]),
@@ -112,7 +120,8 @@ describe("authorization module", () => {
           await authzService.getMatchedPolicies({
             data: { input: { user: { id: 1 } }, context: { patient: { id: 1 } } },
             target: "patient:1:medicalRecord",
-            action: "view"
+            action: "view",
+            attribute: ""
           })
         ).toEqual([Casbin.CasbinPolicyToPolicy(["view", "patient:.*:.*", "=", "input.user.id", "context.patient.id"])]);
       });
