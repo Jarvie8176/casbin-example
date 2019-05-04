@@ -145,13 +145,23 @@ describe("Patients", () => {
       expect(response.body).toEqual({ data: [] });
     });
 
-    // it("GET /patients: log in as doctor, lists available patients", async () => {
-    //   expect(true).toEqual(false);
-    // });
-    //
-    // it("GET /patients: log in as patient, lists own details", async () => {
-    //   expect(true).toEqual(false);
-    // });
+    it("GET /patients: log in as doctor, lists available patients", async () => {
+      const context = <UserContext>{ id: doctorUser.id, persona: [{ type: "doctor", id: doctorUser.id }] };
+      const response = await request(app.getHttpServer())
+        .get(`/patients/?fields=patientInfo`)
+        .set("Cookie", [`context=${JSON.stringify(context)}`])
+        .expect(200);
+      expect(response.body).toEqual({ data: [{ id: patients[1].id }] });
+    });
+
+    it("GET /patients: log in as patient, lists own details", async () => {
+      const context = <UserContext>{ id: patientUser1.id, persona: [{ type: "patient", id: patientUser1.id }] };
+      const response = await request(app.getHttpServer())
+        .get(`/patients/?fields=patientInfo,medicalRecords,billingInfo`)
+        .set("Cookie", [`context=${JSON.stringify(context)}`])
+        .expect(200);
+      expect(response.body).toEqual({ data: [patients[0]] });
+    });
 
     it("GET /patients/:id: log in as patient, views own details", async () => {
       const context = <UserContext>{ id: patientUser1.id, persona: [{ type: "patient", id: patientUser1.id }] };
