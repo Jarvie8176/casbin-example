@@ -1,21 +1,20 @@
 import { Test } from "@nestjs/testing";
 import * as request from "supertest";
-import * as cookieParser from "cookie-parser";
 import { entities } from "ormconfig";
-import { User } from "../../src/entity/User";
-import { Doctor } from "../../src/entity/Doctor";
-import { Accountant } from "../../src/entity/Accountant";
-import { Patient } from "../../src/entity/Patient";
-import { MedicalRecord } from "../../src/entity/MedicalRecord";
-import { BillingInfo } from "../../src/entity/BillingInfo";
+import { User } from "../../../src/entity/User";
+import { Doctor } from "../../../src/entity/Doctor";
+import { Accountant } from "../../../src/entity/Accountant";
+import { Patient } from "../../../src/entity/Patient";
+import { MedicalRecord } from "../../../src/entity/MedicalRecord";
+import { BillingInfo } from "../../../src/entity/BillingInfo";
 import { Connection } from "typeorm";
-import { PatientsService } from "../../src/service/patients/patients.service";
-import { getMockConnection } from "../../src/utils";
-import { metadata } from "../../src/common/metadata/app.module.metadata";
+import { PatientsService } from "../../../src/service/patients/patients.service";
+import { getMockConnection } from "../../../src/utils";
+import { metadata } from "../../../src/common/metadata/app.module.metadata";
 import { INestApplication } from "@nestjs/common";
-import { UserContext } from "../../src/common/interfaces/authz";
+import { UserIdentity } from "../../../src/common/interfaces/authz";
 
-describe("Patients", () => {
+describe("e2e: Patients API", () => {
   let app: INestApplication;
   let mockConnection: Connection;
   let patientsService: PatientsService;
@@ -40,7 +39,6 @@ describe("Patients", () => {
       .useValue(patientsService)
       .compile();
     app = appModule.createNestApplication();
-    app.use(cookieParser());
     await app.init();
   });
 
@@ -51,16 +49,16 @@ describe("Patients", () => {
       jest.spyOn<any, string>(patientsService, "getAuthzEnabled").mockImplementation(() => false);
     });
 
-    it("GET /patients/?fields=patientInfo: returns only patientInfo in the list of mock patients", async () => {
+    it("GET /api/patients/?fields=patientInfo: returns only patientInfo in the list of mock patients", async () => {
       const response = await request(app.getHttpServer())
-        .get("/patients/?fields=patientInfo")
+        .get("/api/patients/?fields=patientInfo")
         .expect(200);
       expect(response.body).toEqual({ data: [{ id: patients[0].id }, { id: patients[1].id }] });
     });
 
-    it("GET /patients/:id/?fields=: returns all the detail of mock patients", async () => {
+    it("GET /api/patients/:id/?fields=: returns all the detail of mock patients", async () => {
       const response = await request(app.getHttpServer())
-        .get(`/patients/${patients[1].id}/`)
+        .get(`/api/patients/${patients[1].id}/`)
         .expect(200);
       expect(response.body).toEqual({
         data: {
@@ -79,25 +77,25 @@ describe("Patients", () => {
       });
     });
 
-    it("GET /patients/:id/?fields=patientInfo: returns only patientInfo in the detail of mock patients", async () => {
+    it("GET /api/patients/:id/?fields=patientInfo: returns only patientInfo in the detail of mock patients", async () => {
       const response = await request(app.getHttpServer())
-        .get(`/patients/${patients[0].id}/?fields=patientInfo`)
+        .get(`/api/patients/${patients[0].id}/?fields=patientInfo`)
         .expect(200);
       expect(response.body).toEqual({ data: { id: patients[0].id } });
     });
 
-    it("GET /patients/:id/?fields=billingInfo: returns only patientInfo and billingInfo in the detail of mock patients", async () => {
+    it("GET /api/patients/:id/?fields=billingInfo: returns only patientInfo and billingInfo in the detail of mock patients", async () => {
       const response = await request(app.getHttpServer())
-        .get(`/patients/`)
+        .get(`/api/patients/`)
         .expect(200);
       expect(response.body).toEqual({
         data: patients
       });
     });
 
-    it("GET /patients/:id/?fields=billingInfo,medicalRecords: returns only patientInfo, billingInfo and medicalRecords in the detail of mock patients", async () => {
+    it("GET /api/patients/:id/?fields=billingInfo,medicalRecords: returns only patientInfo, billingInfo and medicalRecords in the detail of mock patients", async () => {
       const response = await request(app.getHttpServer())
-        .get(`/patients/${patients[1].id}/?fields=billingInfo,medicalRecords`)
+        .get(`/api/patients/${patients[1].id}/?fields=billingInfo,medicalRecords`)
         .expect(200);
       expect(response.body).toEqual({
         data: {
@@ -116,9 +114,9 @@ describe("Patients", () => {
       });
     });
 
-    it("GET /patients/:id/: id must be an int", async () => {
+    it("GET /api/patients/:id/: id must be an int", async () => {
       await request(app.getHttpServer())
-        .get(`/patients/A/?fields=billingInfo,medicalRecords`)
+        .get(`/api/patients/A/?fields=billingInfo,medicalRecords`)
         .expect(400);
     });
   });
@@ -128,55 +126,53 @@ describe("Patients", () => {
       jest.spyOn<any, string>(patientsService, "getAuthzEnabled").mockImplementation(() => true);
     });
 
-    it("GET /patients: log in as admin, lists all patients", async () => {
-      const context = <UserContext>{ id: 999, privilegeLevel: 999, persona: [{ type: "admin", id: 999 }] };
+    it("GET /api/patients: log in as admin, lists all patients", async () => {
+      const identity = <UserIdentity>{ id: 999, privilegeLevel: 999, persona: [{ type: "admin", id: 999 }] };
       await request(app.getHttpServer())
-        .get(`/patients/${patients[1].id}/?fields=billingInfo,medicalRecords`)
-        .set("Cookie", [`context=${JSON.stringify(context)}`])
+        .get(`/api/patients/${patients[1].id}/?fields=billingInfo,medicalRecords`)
+        .set("identity", JSON.stringify(identity))
         .expect(200);
     });
 
-    it("GET /patients: log in as no one, lists nothing", async () => {
-      const context = undefined;
+    it("GET /api/patients: log in as no one, lists nothing", async () => {
       const response = await request(app.getHttpServer())
-        .get(`/patients/`)
-        .set("Cookie", [`context=${JSON.stringify(context)}`])
+        .get(`/api/patients/`)
         .expect(200);
       expect(response.body).toEqual({ data: [] });
     });
 
-    it("GET /patients: log in as doctor, lists available patients", async () => {
-      const context = <UserContext>{ id: doctorUser.id, persona: [{ type: "doctor", id: doctorUser.id }] };
+    it("GET /api/patients: log in as doctor, lists available patients", async () => {
+      const identity = <UserIdentity>{ id: doctorUser.id, persona: [{ type: "doctor", id: doctorUser.id }] };
       const response = await request(app.getHttpServer())
-        .get(`/patients/?fields=patientInfo`)
-        .set("Cookie", [`context=${JSON.stringify(context)}`])
+        .get(`/api/patients/?fields=patientInfo`)
+        .set("identity", JSON.stringify(identity))
         .expect(200);
       expect(response.body).toEqual({ data: [{ id: patients[1].id }] });
     });
 
-    it("GET /patients: log in as patient, lists own details", async () => {
-      const context = <UserContext>{ id: patientUser1.id, persona: [{ type: "patient", id: patientUser1.id }] };
+    it("GET /api/patients: log in as patient, lists own details", async () => {
+      const identity = <UserIdentity>{ id: patientUser1.id, persona: [{ type: "patient", id: patientUser1.id }] };
       const response = await request(app.getHttpServer())
-        .get(`/patients/?fields=patientInfo,medicalRecords,billingInfo`)
-        .set("Cookie", [`context=${JSON.stringify(context)}`])
+        .get(`/api/patients/?fields=patientInfo,medicalRecords,billingInfo`)
+        .set("identity", JSON.stringify(identity))
         .expect(200);
       expect(response.body).toEqual({ data: [patients[0]] });
     });
 
-    it("GET /patients/:id: log in as patient, views own details", async () => {
-      const context = <UserContext>{ id: patientUser1.id, persona: [{ type: "patient", id: patientUser1.id }] };
+    it("GET /api/patients/:id: log in as patient, views own details", async () => {
+      const identity = <UserIdentity>{ id: patientUser1.id, persona: [{ type: "patient", id: patientUser1.id }] };
       const response = await request(app.getHttpServer())
-        .get(`/patients/${patients[0].id}/?fields=billingInfo,medicalRecords`)
-        .set("Cookie", [`context=${JSON.stringify(context)}`])
+        .get(`/api/patients/${patients[0].id}/?fields=billingInfo,medicalRecords`)
+        .set("identity", JSON.stringify(identity))
         .expect(200);
       expect(response.body).toEqual({ data: patients[0] });
     });
 
-    it("GET /patients/:id: log in as doctor, views accessible patient medical records", async () => {
-      const context = <UserContext>{ id: doctorUser.id, persona: [{ type: "doctor", id: doctorUser.id }] };
+    it("GET /api/patients/:id: log in as doctor, views accessible patient medical records", async () => {
+      const identity = <UserIdentity>{ id: doctorUser.id, persona: [{ type: "doctor", id: doctorUser.id }] };
       const response = await request(app.getHttpServer())
-        .get(`/patients/${patients[1].id}/?fields=medicalRecords`)
-        .set("Cookie", [`context=${JSON.stringify(context)}`])
+        .get(`/api/patients/${patients[1].id}/?fields=medicalRecords`)
+        .set("identity", JSON.stringify(identity))
         .expect(200);
       expect(response.body).toEqual({
         data: {
@@ -186,19 +182,19 @@ describe("Patients", () => {
       });
     });
 
-    it("GET /patients/:id: log in as doctor, views accessible patient billingInfo", async () => {
-      const context = <UserContext>{ id: doctorUser.id, persona: [{ type: "doctor", id: doctorUser.id }] };
+    it("GET /api/patients/:id: log in as doctor, views accessible patient billingInfo", async () => {
+      const identity = <UserIdentity>{ id: doctorUser.id, persona: [{ type: "doctor", id: doctorUser.id }] };
       await request(app.getHttpServer())
-        .get(`/patients/${patients[1].id}/?fields=billingInfo`)
-        .set("Cookie", [`context=${JSON.stringify(context)}`])
+        .get(`/api/patients/${patients[1].id}/?fields=billingInfo`)
+        .set("identity", JSON.stringify(identity))
         .expect(403);
     });
 
-    it("GET /patients/:id: log in as doctor, views non-accessible patient details", async () => {
-      const context = <UserContext>{ id: doctorUser.id, persona: [{ type: "doctor", id: doctorUser.id }] };
+    it("GET /api/patients/:id: log in as doctor, views non-accessible patient details", async () => {
+      const identity = <UserIdentity>{ id: doctorUser.id, persona: [{ type: "doctor", id: doctorUser.id }] };
       await request(app.getHttpServer())
-        .get(`/patients/${patients[1].id}/?fields=billingInfo,medicalRecords`)
-        .set("Cookie", [`context=${JSON.stringify(context)}`])
+        .get(`/api/patients/${patients[1].id}/?fields=billingInfo,medicalRecords`)
+        .set("identity", JSON.stringify(identity))
         .expect(403);
     });
   });

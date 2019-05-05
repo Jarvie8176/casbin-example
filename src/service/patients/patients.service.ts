@@ -8,7 +8,7 @@ import { IPatientsService, PatientsServiceRequest } from "../../common/interface
 import { AuthzQuery } from "../authz/vendors/authz.vendors";
 import * as _ from "lodash";
 import * as util from "util";
-import { UserContext, UserPersona } from "../../common/interfaces/authz";
+import { UserIdentity, UserPersona } from "../../common/interfaces/authz";
 import { Policy } from "../authz/authz.adapter";
 import { QueryModifier } from "./queryModifier";
 
@@ -37,7 +37,7 @@ export class PatientsService implements IPatientsService {
   static readonly DefaultCandidates = ["patientInfo"];
 
   @UseInterceptors(ClassSerializerInterceptor)
-  async list(user: UserContext, includes?: string[]): Promise<Patient[]> {
+  async list(user: UserIdentity, includes?: string[]): Promise<Patient[]> {
     includes = this.filterAttributes(includes);
 
     let dataQuery = this.getConnection()
@@ -87,7 +87,7 @@ export class PatientsService implements IPatientsService {
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  async detail(user: UserContext, patientId: number, includes?: string[]): Promise<Patient> {
+  async detail(user: UserIdentity, patientId: number, includes?: string[]): Promise<Patient> {
     includes = this.filterAttributes(includes);
 
     // authz
@@ -164,7 +164,7 @@ export class PatientsService implements IPatientsService {
   }
 
   private async computePatientsServiceRequest(
-    user: UserContext,
+    user: UserIdentity,
     attributes: string[],
     patientId?: number
   ): Promise<PatientsServiceRequest> {

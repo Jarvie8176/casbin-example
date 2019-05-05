@@ -1,4 +1,4 @@
-import { NestFactory } from "@nestjs/core";
+import { NestApplication, NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { createConnection, getConnection } from "typeorm";
 import { Patient } from "./entity/Patient";
@@ -8,15 +8,25 @@ import { Doctor } from "./entity/Doctor";
 import { User } from "./entity/User";
 import { MedicalRecord } from "./entity/MedicalRecord";
 import * as cookieParser from "cookie-parser";
+import { join } from "path";
+import { Client } from "src/client/client";
+
+bootstrap().catch(err => console.error(err));
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  app.use(cookieParser());
+  const app = await NestFactory.create<NestApplication>(AppModule);
+  await setup(app, new Client());
   await createConnection();
   await seeding();
   await app.listen(3000);
 }
-bootstrap().catch(err => console.error(err));
+
+export async function setup(app: NestApplication, client) {
+  app.use(cookieParser());
+  app.setBaseViewsDir(join(__dirname, "..", "views"));
+  app.setViewEngine("hbs");
+  app.use("/patients", client.router);
+}
 
 async function seeding() {
   const connection = getConnection();

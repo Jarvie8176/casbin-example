@@ -1,6 +1,6 @@
 import { QueryBuilder } from "typeorm";
 
-export interface UserContext {
+export interface UserIdentity {
   id: number;
   privilegeLevel?: number;
   persona: UserPersona[];
