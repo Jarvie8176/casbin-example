@@ -10,6 +10,7 @@ import * as cookieParser from "cookie-parser";
 
 describe("e2e: client pages", () => {
   let app;
+  let server;
   let client;
   let patientsService: PatientsService;
 
@@ -47,7 +48,11 @@ describe("e2e: client pages", () => {
     app.setBaseViewsDir(join(__dirname, "..", "views"));
     app.setViewEngine("hbs");
     app.use("/patients", client.router);
-    await app.listen(3000);
+    server = await app.listen(3000);
+  });
+
+  afterAll(async () => {
+    await server.close();
   });
 
   it("GET /patients: renders data as fetched from the api", async () => {

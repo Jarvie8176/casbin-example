@@ -133,9 +133,7 @@ describe("PatientsController", () => {
       where: { id: patient2.id }
     });
 
-    // load auto populated data
+    // load fixture data
     patients = [patient1, patient2];
-
-    console.log("fixture setup done");
   }
 });
