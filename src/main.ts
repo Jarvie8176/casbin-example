@@ -18,7 +18,7 @@ async function bootstrap() {
   await setup(app, new Client());
   await createConnection();
   await seeding();
-  await app.listen(3000);
+  await app.listen(process.env.PORT || 3000);
 }
 
 export async function setup(app: NestApplication, client) {

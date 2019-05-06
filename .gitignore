@@ -6,3 +6,4 @@ tmp/
 temp/
 coverage/
 db/
+dist/

@@ -1,18 +1,18 @@
 import { Test } from "@nestjs/testing";
 import * as request from "supertest";
 import { entities } from "ormconfig";
-import { User } from "../../../src/entity/User";
-import { Doctor } from "../../../src/entity/Doctor";
-import { Accountant } from "../../../src/entity/Accountant";
-import { Patient } from "../../../src/entity/Patient";
-import { MedicalRecord } from "../../../src/entity/MedicalRecord";
-import { BillingInfo } from "../../../src/entity/BillingInfo";
+import { User } from "src/entity/User";
+import { Doctor } from "src/entity/Doctor";
+import { Accountant } from "src/entity/Accountant";
+import { Patient } from "src/entity/Patient";
+import { MedicalRecord } from "src/entity/MedicalRecord";
+import { BillingInfo } from "src/entity/BillingInfo";
 import { Connection } from "typeorm";
-import { PatientsService } from "../../../src/service/patients/patients.service";
-import { getMockConnection } from "../../../src/utils";
-import { metadata } from "../../../src/common/metadata/app.module.metadata";
+import { PatientsService } from "src/service/patients/patients.service";
+import { getMockConnection } from "src/utils";
+import { metadata } from "src/common/metadata/app.module.metadata";
 import { INestApplication } from "@nestjs/common";
-import { UserIdentity } from "../../../src/common/interfaces/authz";
+import { UserIdentity } from "src/common/interfaces/authz";
 
 describe("e2e: Patients API", () => {
   let app: INestApplication;
