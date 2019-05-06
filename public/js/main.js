@@ -10,19 +10,27 @@
       .get();
 
     let patientId = $("#patient-id").val();
-    const res = await axios.get(`${API_URL}/api/patients/${patientId ? patientId : ""}?fields=${fields.join(",")}`, {
-      headers: { identity: $.cookie("identity") }
-    });
-    const container = $("<div>");
-    let patientDataList = _.isArray(res.data.data) ? res.data.data : [res.data.data];
-    _.each(patientDataList, patientData => {
-      container.append($("<div class='patient'>").append(JSON2HTMLList(patientData)));
-      container.append();
-    });
+    try {
+      const res = await axios.get(`${API_URL}/api/patients/${patientId ? patientId : ""}?fields=${fields.join(",")}`, {
+        headers: { identity: $.cookie("identity") }
+      });
+      const container = $("<div>");
+      let patientDataList = _.isArray(res.data.data) ? res.data.data : [res.data.data];
+      _.each(patientDataList, patientData => {
+        container.append($("<div class='patient'>").append(JSON2HTMLList(patientData)));
+        container.append();
+      });
 
-    $("#data")
-      .empty()
-      .append(container);
+      $("#data")
+        .empty()
+        .append(container);
+    }
+    catch (err) {
+      $("#data")
+        .empty()
+        .append($(`<p>${err.message}</p>`));
+    }
+
   }
 
   async function fetchPatientDetails() {}
