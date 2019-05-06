@@ -1,0 +1,7 @@
+{
+  "name": "casbin-example",
+  "description": "ABAC authorization example with Casbin",
+  "repository": "https://github.com/Jarvie8176/casbin-example",
+  "logo": "https://node-js-sample.herokuapp.com/node.png",
+  "keywords": ["authz", "casbin", "abac"]
+}
