@@ -9,7 +9,7 @@
     "compile": "tsc -p tsconfig.build.json",
     "build": "npm run clean && npm run compile && ./node_modules/.bin/tsc-resolve -p tsconfig.json",
     "format": "prettier --write \"src/**/*.ts\"",
-    "start": "node dist/main.js",
+    "start": "./node_modules/.bin/ts-node -r tsconfig-paths/register src/main.ts",
     "start:dev": "nodemon",
     "start:debug": "nodemon --config nodemon-debug.json",
     "prestart:prod": "rimraf dist && npm run build",
@@ -25,7 +25,6 @@
   },
   "dependencies": {
     "ts-node": "^7.0.1",
-    "@babel/preset-env": "^7.4.4",
     "@nestjs/common": "^6.0.0",
     "@nestjs/core": "^6.0.0",
     "@nestjs/platform-express": "^6.0.0",
