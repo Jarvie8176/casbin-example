@@ -17,7 +17,6 @@ import { UserIdentity } from "../../../src/common/interfaces/authz";
 describe("e2e: Patients API", () => {
   let app: INestApplication;
   let mockConnection: Connection;
-  let patientsService: PatientsService;
 
   let doctorUser: User;
   let accountantUser: User;
@@ -28,11 +27,6 @@ describe("e2e: Patients API", () => {
   beforeAll(async () => {
     mockConnection = await getMockConnection(entities);
     await fixtureSetup();
-
-    const apiModule = await Test.createTestingModule(metadata).compile();
-    patientsService = apiModule.get("PatientsService");
-    await patientsService.onModuleInit();
-    jest.spyOn<any, string>(patientsService, "getConnection").mockImplementation(() => mockConnection);
   });
 
   afterAll(async () => mockConnection.close());
@@ -40,12 +34,13 @@ describe("e2e: Patients API", () => {
   describe("usage", () => {
     beforeAll(async () => {
       const appModule = await Test.createTestingModule(metadata)
-        .overrideProvider(PatientsService)
-        .useValue(patientsService)
         .overrideProvider("AUTHZ_ENABLE")
         .useValue(false)
         .compile();
       app = appModule.createNestApplication();
+      const patientsService = appModule.get("PatientsService");
+      await patientsService.onModuleInit();
+      jest.spyOn<any, string>(patientsService, "getConnection").mockImplementation(() => mockConnection);
       await app.init();
     });
 
@@ -124,12 +119,13 @@ describe("e2e: Patients API", () => {
   describe("authorization", () => {
     beforeAll(async () => {
       const appModule = await Test.createTestingModule(metadata)
-        .overrideProvider(PatientsService)
-        .useValue(patientsService)
         .overrideProvider("AUTHZ_ENABLE")
         .useValue(true)
         .compile();
       app = appModule.createNestApplication();
+      const patientsService = appModule.get("PatientsService");
+      await patientsService.onModuleInit();
+      jest.spyOn<any, string>(patientsService, "getConnection").mockImplementation(() => mockConnection);
       await app.init();
     });
 
