@@ -23,8 +23,7 @@ async function bootstrap() {
 
 export async function setup(app: NestApplication, client) {
   app.use(cookieParser());
-  app.setBaseViewsDir(join(__dirname, "..", "views"));
-  app.setViewEngine("hbs");
+  app.useStaticAssets(join(__dirname, "..", "public"));
   app.use("/patients", client.router);
 }
 

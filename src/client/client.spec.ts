@@ -12,14 +12,10 @@ describe("client pages", () => {
     app.use(client.router);
   });
 
-  it("GET /patients: renders data as fetched from the api", async () => {
-    jest.spyOn<any, string>(client, "fetchPatientList").mockImplementation(() => ({ data: "data" }));
-    jest.spyOn<any, string>(client, "renderPatientList").mockImplementation((res, data) => data);
-    expect(await client.servePatientList(null, null, null)).toEqual("data");
-  });
-  it("GET /patients/:id/: renders data as fetched from the api", async () => {
-    jest.spyOn<any, string>(client, "fetchPatientDetail").mockImplementation(() => ({ data: "data" }));
-    jest.spyOn<any, string>(client, "renderPatientDetail").mockImplementation((res, data) => data);
-    expect(await client.servePatientDetail(null, null, null)).toEqual("data");
+  it("GET /patients: services html page", async () => {
+    const expectedSendParam = ["list.html", { root: "public" }];
+    let resSendParams = null;
+    await client.servicePatientPage(null, { sendFile: (...args) => (resSendParams = args) }, null);
+    expect(resSendParams).toEqual(expectedSendParam);
   });
 });

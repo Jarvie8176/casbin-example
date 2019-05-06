@@ -31,7 +31,10 @@ describe("PatientsController", () => {
 
   describe("data & output", () => {
     beforeAll(async () => {
-      const module = await Test.createTestingModule(metadata).compile();
+      const module = await Test.createTestingModule(metadata)
+        .overrideProvider("AUTHZ_ENABLE")
+        .useValue(false)
+        .compile();
       patientsController = module.get("PatientsController");
       patientsService = module.get("PatientsService");
       await patientsService.onModuleInit();
@@ -43,8 +46,8 @@ describe("PatientsController", () => {
     });
 
     it("PatientsController:detail(): returns details of mock patients", async () => {
-      expect(await patientsController.detail(patients[0].id)).toEqual(patients[0]);
-      expect(await patientsController.detail(patients[1].id)).toEqual(patients[1]);
+      await expect(patientsController.detail(patients[0].id)).resolves.toEqual(patients[0]);
+      await expect(patientsController.detail(patients[1].id)).resolves.toEqual(patients[1]);
     });
   });
 

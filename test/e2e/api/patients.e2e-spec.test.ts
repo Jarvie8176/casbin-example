@@ -33,20 +33,20 @@ describe("e2e: Patients API", () => {
     patientsService = apiModule.get("PatientsService");
     await patientsService.onModuleInit();
     jest.spyOn<any, string>(patientsService, "getConnection").mockImplementation(() => mockConnection);
-
-    const appModule = await Test.createTestingModule(metadata)
-      .overrideProvider(PatientsService)
-      .useValue(patientsService)
-      .compile();
-    app = appModule.createNestApplication();
-    await app.init();
   });
 
   afterAll(async () => mockConnection.close());
 
   describe("usage", () => {
     beforeAll(async () => {
-      jest.spyOn<any, string>(patientsService, "getAuthzEnabled").mockImplementation(() => false);
+      const appModule = await Test.createTestingModule(metadata)
+        .overrideProvider(PatientsService)
+        .useValue(patientsService)
+        .overrideProvider("AUTHZ_ENABLE")
+        .useValue(false)
+        .compile();
+      app = appModule.createNestApplication();
+      await app.init();
     });
 
     it("GET /api/patients/?fields=patientInfo: returns only patientInfo in the list of mock patients", async () => {
@@ -123,7 +123,14 @@ describe("e2e: Patients API", () => {
 
   describe("authorization", () => {
     beforeAll(async () => {
-      jest.spyOn<any, string>(patientsService, "getAuthzEnabled").mockImplementation(() => true);
+      const appModule = await Test.createTestingModule(metadata)
+        .overrideProvider(PatientsService)
+        .useValue(patientsService)
+        .overrideProvider("AUTHZ_ENABLE")
+        .useValue(true)
+        .compile();
+      app = appModule.createNestApplication();
+      await app.init();
     });
 
     it("GET /api/patients: log in as admin, lists all patients", async () => {
@@ -157,6 +164,19 @@ describe("e2e: Patients API", () => {
         .set("identity", JSON.stringify(identity))
         .expect(200);
       expect(response.body).toEqual({ data: [patients[0]] });
+    });
+
+    it("GET /api/patients/:id: log in as admin, views patient's details", async () => {
+      const identity = <UserIdentity>{
+        id: 999,
+        privilegeLevel: 999,
+        persona: [{ type: "admin", id: 999 }]
+      };
+      const response = await request(app.getHttpServer())
+        .get(`/api/patients/${patients[0].id}/?fields=billingInfo,medicalRecords`)
+        .set("identity", JSON.stringify(identity))
+        .expect(200);
+      expect(response.body).toEqual({ data: patients[0] });
     });
 
     it("GET /api/patients/:id: log in as patient, views own details", async () => {

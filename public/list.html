@@ -1,0 +1,43 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="css/main.css" />
+    <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="js/json2html.js"></script>
+    <script src="js/main.js"></script>
+  </head>
+  <body>
+    <p>Patient List</p>
+    <div>
+      <form id="inputs">
+        <div>
+          <label for="identity-selection">login as: </label>
+          <select id="identity-selection">
+            <option value="admin">Admin User</option>
+            <option value="doctor">Doctor User</option>
+            <option value="accountant">Accountant User</option>
+            <option value="patient1">Patient User 1</option>
+            <option value="patient2">Patient User 2</option>
+          </select>
+        </div>
+        <div><label for="patient-id">see details of: </label> <input id="patient-id" placeholder="patient id" /></div>
+        <div>
+          <label>attributes: </label> <input type="checkbox" id="foo" value="patientInfo" />patient info<input
+            type="checkbox"
+            value="medicalRecords"
+          />medical records <input type="checkbox" value="billingInfo" />billing
+        </div>
+        <button id="fetch-button" type="button">Fetch</button>
+      </form>
+    </div>
+    <div><div id="data"></div></div>
+
+    <script>
+      $("#fetch-button").on("click", async () => {
+        return fetchPatients();
+      });
+    </script>
+  </body>
+</html>

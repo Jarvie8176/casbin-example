@@ -2,7 +2,7 @@ import { PatientsController } from "../../api/patients.controller";
 import { PatientsService } from "../../service/patients/patients.service";
 import { AuthzModule } from "../../authz.module";
 
-export const metadata = getMetadata(false);
+export const metadata = getMetadata(true);
 
 export function getMetadata(authzEnable: boolean) {
   return {
