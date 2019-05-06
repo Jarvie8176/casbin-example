@@ -35,7 +35,7 @@
     console.log(`setIdentity(${user})`);
     switch (user) {
       case "admin":
-        return $.cookie("identity", JSON.stringify({ id: 999, priviledgeLevel: 999 }));
+        return $.cookie("identity", JSON.stringify({ id: 999, privilegeLevel: 999 }));
         break;
       case "doctor":
         return $.cookie("identity", JSON.stringify({ id: 1 }));
