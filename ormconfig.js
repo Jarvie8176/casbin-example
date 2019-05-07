@@ -4,7 +4,7 @@ module.exports = {
   database: ":memory:",
   synchronize: true,
   logging: true,
-  entities: ["src/entity/*.ts"],
+  entities: ["src/entity/**/*.ts"],
   migrations: ["src/migration/**/*.ts"],
   subscribers: ["src/subscriber/**/*.ts"],
   cli: {

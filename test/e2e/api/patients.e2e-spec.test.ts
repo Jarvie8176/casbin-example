@@ -1,18 +1,18 @@
 import { Test } from "@nestjs/testing";
 import * as request from "supertest";
 import { entities } from "ormconfig";
-import { User } from "../../../src/entity/User";
-import { Doctor } from "../../../src/entity/Doctor";
-import { Accountant } from "../../../src/entity/Accountant";
-import { Patient } from "../../../src/entity/Patient";
-import { MedicalRecord } from "../../../src/entity/MedicalRecord";
-import { BillingInfo } from "../../../src/entity/BillingInfo";
+import { User } from "src/entity/User";
+import { Doctor } from "src/entity/Doctor";
+import { Accountant } from "src/entity/Accountant";
+import { Patient } from "src/entity/Patient";
+import { MedicalRecord } from "src/entity/MedicalRecord";
+import { BillingInfo } from "src/entity/BillingInfo";
 import { Connection } from "typeorm";
-import { PatientsService } from "../../../src/service/patients/patients.service";
-import { getMockConnection } from "../../../src/utils";
-import { metadata } from "../../../src/common/metadata/app.module.metadata";
+import { PatientsService } from "src/service/patients/patients.service";
+import { getMockConnection } from "src/utils";
+import { metadata } from "src/common/metadata/app.module.metadata";
 import { INestApplication } from "@nestjs/common";
-import { UserIdentity } from "../../../src/common/interfaces/authz";
+import { UserIdentity } from "src/common/interfaces/authz";
 
 describe("e2e: Patients API", () => {
   let app: INestApplication;
@@ -153,6 +153,15 @@ describe("e2e: Patients API", () => {
       expect(response.body).toEqual({ data: [{ id: patients[1].id }] });
     });
 
+    it("GET /api/patients: log in as accountant, lists available patients", async () => {
+      const identity = <UserIdentity>{ id: accountantUser.id, persona: [{ type: "doctor", id: accountantUser.id }] };
+      const response = await request(app.getHttpServer())
+        .get(`/api/patients/?fields=patientInfo`)
+        .set("identity", JSON.stringify(identity))
+        .expect(200);
+      expect(response.body).toEqual({ data: [{ id: patients[1].id }] });
+    });
+
     it("GET /api/patients: log in as patient, lists own details", async () => {
       const identity = <UserIdentity>{ id: patientUser1.id, persona: [{ type: "patient", id: patientUser1.id }] };
       const response = await request(app.getHttpServer())
@@ -210,6 +219,45 @@ describe("e2e: Patients API", () => {
       const identity = <UserIdentity>{ id: doctorUser.id, persona: [{ type: "doctor", id: doctorUser.id }] };
       await request(app.getHttpServer())
         .get(`/api/patients/${patients[1].id}/?fields=billingInfo,medicalRecords`)
+        .set("identity", JSON.stringify(identity))
+        .expect(403);
+    });
+
+    it("GET /api/patients/:id: log in as accountant, views accessible patient's billing info", async () => {
+      const identity = <UserIdentity>{
+        id: accountantUser.id,
+        persona: [{ type: "accountant", id: accountantUser.id }]
+      };
+      const response = await request(app.getHttpServer())
+        .get(`/api/patients/${patients[1].id}/?fields=patientInfo,billingInfo`)
+        .set("identity", JSON.stringify(identity))
+        .expect(200);
+      expect(response.body).toEqual({
+        data: {
+          id: patients[1].id,
+          billingInfo: patients[1].billingInfo
+        }
+      });
+    });
+
+    it("GET /api/patients/:id: log in as accountant, views accessible patient's medical records", async () => {
+      const identity = <UserIdentity>{
+        id: accountantUser.id,
+        persona: [{ type: "accountant", id: accountantUser.id }]
+      };
+      await request(app.getHttpServer())
+        .get(`/api/patients/${patients[1].id}/?fields=medicalRecords`)
+        .set("identity", JSON.stringify(identity))
+        .expect(403);
+    });
+
+    it("GET /api/patients/:id: log in as accountant, views non-accessible patient's billing info", async () => {
+      const identity = <UserIdentity>{
+        id: accountantUser.id,
+        persona: [{ type: "accountant", id: accountantUser.id }]
+      };
+      await request(app.getHttpServer())
+        .get(`/api/patients/${patients[0].id}/?fields=billingInfo`)
         .set("identity", JSON.stringify(identity))
         .expect(403);
     });

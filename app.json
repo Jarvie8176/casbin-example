@@ -1,0 +1,6 @@
+{
+  "name": "casbin-example",
+  "description": "ABAC authorization example with Casbin",
+  "repository": "https://github.com/Jarvie8176/casbin-example",
+  "keywords": ["authz", "casbin", "abac"]
+}

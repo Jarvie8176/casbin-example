@@ -3,26 +3,31 @@
 
   async function fetchPatients() {
     setIdentity($("#identity-selection").val());
-    const fields = $("#inputs input:checkbox:checked")
-      .map(function() {
-        return $(this).val();
-      })
-      .get();
+    const dataContainer = $("#data");
+    dataContainer.empty();
 
-    let patientId = $("#patient-id").val();
-    const res = await axios.get(`${API_URL}/api/patients/${patientId ? patientId : ""}?fields=${fields.join(",")}`, {
-      headers: { identity: $.cookie("identity") }
-    });
-    const container = $("<div>");
-    let patientDataList = _.isArray(res.data.data) ? res.data.data : [res.data.data];
-    _.each(patientDataList, patientData => {
-      container.append($("<div class='patient'>").append(JSON2HTMLList(patientData)));
-      container.append();
-    });
+    try {
+      const container = $("<div>");
+      const patientId = $("#patient-id").val();
+      const fields = $("#inputs input:checkbox:checked")
+        .map(function() {
+          return $(this).val();
+        })
+        .get();
+      const res = await axios.get(`${API_URL}/api/patients/${patientId ? patientId : ""}?fields=${fields.join(",")}`, {
+        headers: { identity: $.cookie("identity") }
+      });
+      let patientDataList = _.isArray(res.data.data) ? res.data.data : [res.data.data];
 
-    $("#data")
-      .empty()
-      .append(container);
+      _.each(patientDataList, patientData =>
+        container.append($("<div class='patient'>").append(JSON2HTMLList(patientData)))
+      );
+
+      $("#data").append(container);
+    } catch (err) {
+      console.log(err);
+      $("#data").append($(`<p>${err.message}</p>`));
+    }
   }
 
   async function fetchPatientDetails() {}
