@@ -22,12 +22,22 @@
             <option value="patient2">Patient User 2</option>
           </select>
         </div>
-        <div><label for="patient-id">see details of: </label> <input id="patient-id" placeholder="patient id" /></div>
         <div>
-          <label>attributes: </label> <input type="checkbox" id="foo" value="patientInfo" />patient info<input
+          <label for="patient-id">see details of patient: </label>
+          <input id="patient-id" placeholder="patient id" /> (leave blank to list accessible data)
+        </div>
+        <div>
+          attributes:
+          <input
             type="checkbox"
-            value="medicalRecords"
-          />medical records <input type="checkbox" value="billingInfo" />billing
+            id="chbox1"
+            value="patientInfo"
+            onload="(() => this.setAttribute('size',this.getAttribute('placeholder').length))()"
+          /><label for="chbox1">patient info</label> <input type="checkbox" id="chbox2" value="medicalRecords" /><label
+            for="chbox2"
+            >medical records</label
+          ><input type="checkbox" id="chbox3" value="billingInfo" /><label for="chbox3">billing</label> (leave blank to
+          select all attributes)
         </div>
         <button id="fetch-button" type="button">Fetch</button>
       </form>

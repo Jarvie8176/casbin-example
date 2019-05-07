@@ -11,12 +11,12 @@ li {
   margin: 5px 0;
 }
 
-form {
-  margin: 20px 0;
+form > * {
+  margin: 10px 0;
 }
 
 span {
-  margin: 20px;
+  margin: 20px 0;
 }
 
 .patient {

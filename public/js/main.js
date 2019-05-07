@@ -25,8 +25,7 @@
 
       $("#data").append(container);
     } catch (err) {
-      console.log(err);
-      $("#data").append($(`<p>${err.message}</p>`));
+      $("#data").append($(`<p>${err.message}</p><p>${JSON.stringify(_.get(err, "response.data"))}</p>`));
     }
   }
 
