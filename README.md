@@ -10,6 +10,8 @@ A demo app of attribute-based access control in Node.js based on [Casbin](https:
 
 ## Demo
 
+https://radiant-temple-29238.herokuapp.com/
+
 ## Installation
 
 ```bash
