@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/Jarvie8176/casbin-example.svg?branch=master)](https://travis-ci.org/Jarvie8176/casbin-example)
 [![Coverage Status](https://coveralls.io/repos/github/Jarvie8176/casbin-example/badge.svg?branch=master)](https://coveralls.io/github/Jarvie8176/casbin-example?branch=master)
 [![codebeat badge](https://codebeat.co/badges/173ef15e-9c29-4983-a017-8c364d0f4bff)](https://codebeat.co/projects/github-com-jarvie8176-casbin-example-master)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/jarvie8176/casbin-example/tree/master)
 
 
 
