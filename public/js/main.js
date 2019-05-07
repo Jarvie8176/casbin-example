@@ -17,15 +17,18 @@
       const res = await axios.get(`${API_URL}/api/patients/${patientId ? patientId : ""}?fields=${fields.join(",")}`, {
         headers: { identity: $.cookie("identity") }
       });
+
       let patientDataList = _.isArray(res.data.data) ? res.data.data : [res.data.data];
 
-      _.each(patientDataList, patientData =>
-        container.append($("<div class='patient'>").append(JSON2HTMLList(patientData)))
-      );
-
-      $("#data").append(container);
+      if (_.isEmpty(patientDataList)) dataContainer.append($("<p>No data</p>"));
+      else {
+        _.each(patientDataList, patientData =>
+          container.append($("<div class='patient'>").append(JSON2HTMLList(patientData)))
+        );
+        dataContainer.append(container);
+      }
     } catch (err) {
-      $("#data").append($(`<p>${err.message}</p><p>${JSON.stringify(_.get(err, "response.data"))}</p>`));
+      dataContainer.append($(`<p>${err.message}</p><p>${JSON.stringify(_.get(err, "response.data"))}</p>`));
     }
   }
 
@@ -33,27 +36,15 @@
 
   /**
    *
-   * @param user { "admin" | "doctor" | "accountant" | "patient1" | "patient2" }
+   * @param user { "admin" | number }
    */
   function setIdentity(user) {
     console.log(`setIdentity(${user})`);
     switch (user) {
       case "admin":
         return $.cookie("identity", JSON.stringify({ id: 999, privilegeLevel: 999 }));
-        break;
-      case "doctor":
-        return $.cookie("identity", JSON.stringify({ id: 1 }));
-        break;
-      case "accountant":
-        return $.cookie("identity", JSON.stringify({ id: 2 }));
-        break;
-      case "patient1":
-        return $.cookie("identity", JSON.stringify({ id: 3 }));
-        break;
-      case "patient2":
-        return $.cookie("identity", JSON.stringify({ id: 4 }));
-        break;
       default:
+        if (user) return $.cookie("identity", JSON.stringify({ id: Number(user) }));
         console.log(`invalid user: ${user}`);
     }
   }

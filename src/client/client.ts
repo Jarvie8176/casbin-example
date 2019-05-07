@@ -9,11 +9,11 @@ export class Client {
   }
 
   private routerSetup(): void {
-    this.router.get("/", (req, res, next) => this.servicePatientPage(req, res, next));
+    this.router.get("/", (req, res, next) => this.servePatientPage(req, res, next));
   }
 
   // exposed for testing
-  servicePatientPage(req, res, next) {
+  servePatientPage(req, res, next) {
     return this.sendPatientPage(res);
   }
 

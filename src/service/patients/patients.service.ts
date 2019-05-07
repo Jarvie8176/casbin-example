@@ -104,13 +104,12 @@ export class PatientsService implements IPatientsService {
         )
       );
 
-      if (
-        _.chain(decisions)
-          .map(i => i.decision)
-          .includes(false)
-          .value()
-      )
-        throw new ForbiddenException();
+      const failedDecisions = _.filter(decisions, i => !i.decision);
+      if (!_.isEmpty(failedDecisions)) {
+        throw new ForbiddenException(
+          `access to resources(s) rejected: ${_.map(failedDecisions, i => i.query.target).join(", ")}`
+        );
+      }
     }
 
     return this.getConnection()

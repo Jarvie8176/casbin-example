@@ -15,7 +15,7 @@ describe("client pages", () => {
   it("GET /patients: services html page", async () => {
     const expectedSendParam = ["list.html", { root: "public" }];
     let resSendParams = null;
-    await client.servicePatientPage(null, { sendFile: (...args) => (resSendParams = args) }, null);
+    await client.servePatientPage(null, { sendFile: (...args) => (resSendParams = args) }, null);
     expect(resSendParams).toEqual(expectedSendParam);
   });
 });

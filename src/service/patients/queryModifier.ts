@@ -3,6 +3,7 @@ import { AuthzQuery } from "../authz/vendors/authz.vendors";
 import { Policy } from "../authz/authz.adapter";
 import { InvalidInput } from "../../common/errors/errors";
 import * as _ from "lodash";
+import * as uuid from "uuid";
 
 export class QueryModifier<T> implements IQueryModifier {
   constructor(private readonly authzQuery: AuthzQuery, private readonly policy: Policy) {}
@@ -33,14 +34,15 @@ export class QueryModifier<T> implements IQueryModifier {
     let parsedParams: string[] = [];
     let variables: (any[])[] = [];
 
-    _.each(this.policy.operation.params, (param, index) => {
+    _.each(this.policy.operation.params, param => {
+      let identifier = this.getIdentifier();
       let parsedParam = param.split(".");
       let scope = _.pullAt(parsedParam, 0)[0];
       switch (scope) {
         case "input":
         case "AUTHZ_CTX":
-          parsedParams.push(`:input_${index}`);
-          variables.push([`input_${index}`, _.get(this.authzQuery.data, param)]);
+          parsedParams.push(`:input_${identifier}`);
+          variables.push([`input_${identifier}`, _.get(this.authzQuery.data, param)]);
           break;
         case "context":
           parsedParams.push(_.drop(parsedParam, parsedParam.length - 2).join("."));
@@ -113,5 +115,10 @@ export class QueryModifier<T> implements IQueryModifier {
         .value()
     ];
     return this.inByPath();
+  }
+
+  // exposed for testing
+  private getIdentifier(): string {
+    return uuid.v4();
   }
 }

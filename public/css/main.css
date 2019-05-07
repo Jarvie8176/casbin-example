@@ -2,23 +2,37 @@ body {
   font-family: sans-serif;
 }
 
+.patient > * {
+  margin-bottom: 20px;
+}
+
+.patient ul > * {
+  margin: 10px 0px;
+}
+
+.patient li > * {
+  margin-right: 10px;
+}
+
+
 .patient > div > ul {
   margin: 5px;
   border: 1px solid black;
 }
 
-li {
-  margin: 5px 0;
+table {
+  text-align: left;
+}
+
+td,
+th {
+  padding: 2px 20px;
 }
 
 form > * {
   margin: 10px 0;
 }
 
-span {
-  margin: 20px 0;
-}
-
-.patient {
-  margin-bottom: 10px;
+form li > * {
+  margin: 0 10px;
 }

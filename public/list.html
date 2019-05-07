@@ -5,43 +5,84 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <script src="js/json2html.js"></script>
+    <script src="js/vendors/json2html.js"></script>
     <script src="js/main.js"></script>
   </head>
   <body>
+    <p>User IDs</p>
+    <table>
+      <tr>
+        <th>doctor user 1</th>
+        <th>1</th>
+      </tr>
+      <tr>
+        <th>doctor user 2</th>
+        <th>2</th>
+      </tr>
+      <tr>
+        <th>accountant user 1</th>
+        <th>3</th>
+      </tr>
+      <tr>
+        <th>accountant user 2</th>
+        <th>4</th>
+      </tr>
+      <tr>
+        <th>patient user 1</th>
+        <th>5</th>
+      </tr>
+      <tr>
+        <th>patient user 2</th>
+        <th>6</th>
+      </tr>
+      <tr>
+        <th>patient user 3</th>
+        <th>7</th>
+      </tr>
+    </table>
+
     <p>Patient List</p>
-    <div>
-      <form id="inputs">
-        <div>
-          <label for="identity-selection">login as: </label>
-          <select id="identity-selection">
-            <option value="admin">Admin User</option>
-            <option value="doctor">Doctor User</option>
-            <option value="accountant">Accountant User</option>
-            <option value="patient1">Patient User 1</option>
-            <option value="patient2">Patient User 2</option>
-          </select>
-        </div>
-        <div>
-          <label for="patient-id">see details of patient: </label>
-          <input id="patient-id" placeholder="patient id" /> (leave blank to list accessible data)
-        </div>
-        <div>
-          attributes:
-          <input
-            type="checkbox"
-            id="chbox1"
-            value="patientInfo"
-            onload="(() => this.setAttribute('size',this.getAttribute('placeholder').length))()"
-          /><label for="chbox1">patient info</label> <input type="checkbox" id="chbox2" value="medicalRecords" /><label
-            for="chbox2"
-            >medical records</label
-          ><input type="checkbox" id="chbox3" value="billingInfo" /><label for="chbox3">billing</label> (leave blank to
-          select all attributes)
-        </div>
-        <button id="fetch-button" type="button">Fetch</button>
-      </form>
-    </div>
+    <form id="inputs">
+      <table>
+        <tr>
+          <th><label for="identity-selection">login as: </label></th>
+          <th>
+            <select id="identity-selection">
+              <option value="admin">Admin User</option>
+              <option value="1">Doctor User 1</option>
+              <option value="2">Doctor User 2</option>
+              <option value="3">Accountant User 1</option>
+              <option value="4">Accountant User 2</option>
+              <option value="5">Patient User 1</option>
+              <option value="6">Patient User 2</option>
+              <option value="7">Patient User 3</option>
+            </select>
+          </th>
+        </tr>
+        <tr>
+          <th><label for="patient-id">see details of patient: </label></th>
+          <th><input id="patient-id" placeholder="patient id" onkeypress="(() => {})()" /></th>
+          <th>(leave blank to list accessible data)</th>
+        </tr>
+        <tr>
+          <th>attributes:</th>
+          <th>
+            <input
+              type="checkbox"
+              id="chbox1"
+              value="patientInfo"
+              checked="checked"
+              onload="(() => this.setAttribute('size',this.getAttribute('placeholder').length))()"
+            /><label for="chbox1">patient info</label>
+            <input type="checkbox" id="chbox2" value="medicalRecords" /><label for="chbox2">medical records</label
+            ><input type="checkbox" id="chbox3" value="billingInfo" /><label for="chbox3">billing</label>
+          </th>
+          <th>(leave blank to select all attributes)</th>
+        </tr>
+      </table>
+
+      <button id="fetch-button" type="button">Fetch</button>
+    </form>
     <div><div id="data"></div></div>
 
     <script>

@@ -43,6 +43,7 @@ describe("QueryModifier", () => {
             operation: { operator: `${op}`, params: ["input.user.id", "context.patient.id"] }
           };
           let queryModifier = new QueryModifier(authzQuery, policy);
+          jest.spyOn<any, string>(queryModifier, "getIdentifier").mockImplementation(() => "0");
           expect(queryModifier.primitives()).toEqual(<ModificationClause>{
             queryParticle: `:input_0 ${op} patient.id`,
             params: { input_0: 1 }
@@ -65,6 +66,7 @@ describe("QueryModifier", () => {
           operation: { operator: `inByPath`, params: ["input.user.id", "context.patient.billingInfo.accountant"] }
         };
         let queryModifier = new QueryModifier(authzQuery, policy);
+        jest.spyOn<any, string>(queryModifier, "getIdentifier").mockImplementation(() => "0");
         expect(queryModifier.inByPath()).toEqual(<ModificationClause>{
           queryParticle: `:input_0 = billingInfo.accountant`,
           params: {
@@ -91,6 +93,7 @@ describe("QueryModifier", () => {
           }
         };
         let queryModifier = new QueryModifier(authzQuery, policy);
+        jest.spyOn<any, string>(queryModifier, "getIdentifier").mockImplementation(() => "0");
         expect(queryModifier.inByPathNested()).toEqual(<ModificationClause>{
           queryParticle: `:input_0 = doctorsAssigned.id`,
           params: {
