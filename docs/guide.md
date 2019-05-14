@@ -4,13 +4,13 @@
 
 - Given the context, The Authorization service should:
   - produce a boolean decision of whether a user can access a particular resource.
-  - produce a list of access policies of how decisions can be made.
+  - produce a list of policies of how decisions can be made.
 
 ## Domain Service
 
 - Given the authorization decision, the domain service should:
   - enforce the decision.
-  - list available resources.
+  - fetch (properties) of available resources.
 
 # Functional Requirements
 
@@ -34,10 +34,10 @@
 
 ## Authorization Policy
 
-- A patient can view all of own attributes.
+- A patient can view all of own properties.
 - A doctor can view `info` AND `medicalRecords` of patients who's `medicalRecord` is assigned to that doctor.
 - An accountant can view `info` AND `billing info` of patients who's `billing info` is assigned to that doctor.
-- An admin can do anything.
+- An admin can do everything.
 
 # Implementation
 
@@ -62,7 +62,7 @@
 - context
   - context of the authz request, e.g. current state of the requested resource, system time.
 - AUTHZ_CTX
-  - static environment variables.
+  - static environment variables. e.g. `ADMIN_PRIVILEGE_LEVEL = 5`.
 
 ### Core
 
@@ -74,35 +74,39 @@ For each policy, `match()` produces a boolean result of whether the condition is
 
 `match(op, p1, p2, ..., pn): boolean`
 
-- op:
+- `op`:
   - Basic Logical operators:
-    - "="
-    - "!="
-    - "<"
-    - "<="
-    - ">"
-    - ">="
-  - Nested operator
-  * operator of the policy. `"="`, `"!="`, `"<"`, `"<="`, `"in"`, etc.
-- p1, p2, ..., pn:
-
+    - `=`
+    - `!=`
+    - `<`
+    - `<=`
+    - `>"`
+    - `>=
+  - Nested operators:
+    - `in`
+    - `notIn`
+    - `inByPath`
+      - e.g. refers to `id` in `{ "accountant": [{"id": 1}] }`
+    - `inByPathNested`
+      - e.g. refers to `id` in `{ "medicalRecords": [{ "doctor": { "id": 1 } }] }`
+- `p1`, `p2`, ..., `pn`:
   - path to an argument
 
 details of usages in `src/service/authz/vendors/casbin/abacMatcher.spec.ts`.
 
 ### Authorization Decision
 
-- casbin's built-in functions can handle coarse-grained access control,
+- casbin's built-in functions can handle static, coarse-grained access control,
   - i.e. `r.act == p.act && regexMatch(r.obj, p.obj)`
-- fine-grained access control based on attributes requires evaluation based on rich input and context (e.g. a nested json), and (relatively) complex logic (e.g. `in`, `inByPath`), so it's better to write such evaluation in a function.
+- fine-grained access control requires evaluation based on rich input and context (e.g. a nested json), and (relatively) complex logic (e.g. `in`, `inByPath`), so it's better to write such evaluation in a programming language.
 
 #### Use Cases
 
-##### Deterministic (can current user access (part of) a particular resource)
+##### Full Match (can current user access (part of) a particular resource)
 
 - the requesting service only needs a boolean decision from `AuthzAdapter.getDecision()`.
 
-##### Non-deterministic (what can current user see)
+##### Partial Match (what can current user see)
 
 - the requesting service needs to modify data query, or filter out what are accessible. Such condition can be derived from `AuthzAdapter.getCheckedPolicies()`.
 
