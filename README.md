@@ -12,6 +12,8 @@ A demo app of attribute-based access control in Node.js based on [Casbin](https:
 
 https://radiant-temple-29238.herokuapp.com/
 
+* it may take a few minutes to load if the webapp is inactive for too long.
+
 ## Guide
 
 see [docs/guide.md](docs/guide.md).
